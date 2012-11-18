@@ -30,23 +30,18 @@ module testbench_ADSR;
 	reg new_sample;
 	reg new_note_pulse;
 	reg release_note_pulse;
-	reg [7:0] attack_rate;
-	reg [7:0] decay_rate;
-	reg [7:0] release_rate;
-	reg [17:0] sustain_value;
-	reg [17:0] input_sample_r;
-	reg [17:0] input_sample_l;
-
-	// Outputs
-	wire [17:0] output_sample_r;
-	wire [17:0] output_sample_l;
-	wire [2:0] state;
+	reg [6:0] attack_rate;
+	reg [6:0] decay_rate;
+	reg [6:0] release_rate;
+	reg [6:0] sustain_value;
+   wire [17:0] volume;
+	wire [4:0] state;
 
 
    reg [7:0] count;
    
 	// Instantiate the Unit Under Test (UUT)
-	ADSR_mngt uut (
+	adsr_mngt uut (
 		.clk(clk), 
 		.rst(rst), 
 		.new_sample(new_sample), 
@@ -56,10 +51,7 @@ module testbench_ADSR;
 		.decay_rate(decay_rate), 
 		.release_rate(release_rate), 
 		.sustain_value(sustain_value), 
-		.input_sample_r(input_sample_r), 
-		.output_sample_r(output_sample_r), 
-		.input_sample_l(input_sample_l), 
-		.output_sample_l(output_sample_l), 
+		.volume(volume),  
 		.state(state)
 	);
 
@@ -70,12 +62,10 @@ module testbench_ADSR;
 		new_sample = 0;
 		new_note_pulse = 0;
 		release_note_pulse = 0;
-		attack_rate = 8'hFF;
-		decay_rate = 8'hFF;
-		release_rate = 8'hFF;
-		sustain_value = 8'b00100000;
-		input_sample_r = 18'h0FFFF;
-		input_sample_l = 18'h3FFFF;
+		attack_rate = 7'hFF;
+		decay_rate = 7'hFF;
+		release_rate = 7'hFF;
+		sustain_value = 7'b0100000;
 		count = 0;
 
 		// Wait 10 ns for global reset to finish

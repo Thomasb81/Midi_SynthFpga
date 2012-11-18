@@ -9,7 +9,7 @@ module adsr_mngt(
     input [6:0] decay_rate,
     input [6:0] release_rate,
     input [6:0] sustain_value,
-    output reg [17:0] volume,
+    output [17:0] volume,
     output reg [4:0] state
     );
 
@@ -30,7 +30,7 @@ wire [17:0] sustain_value_internal;
 //assign sustain_value_internal = `VOLUME_SUSTAIN;
 assign sustain_value_internal = {6'b000000,sustain_value,5'b00000};
 
-//reg signed [17:0] volume;
+reg [17:0] volume_d;
 reg latch_new_note;
 reg latch_release_note;
 
@@ -39,108 +39,92 @@ reg latch_release_note;
   latch_release_note = 1'b0;
 end*/
 
-
+assign volume = (state[2:0] == `ATTACK ) ? volume_d + attack_rate :
+                (state[2:0] == `DECAY ) ? volume_d - decay_rate :
+                (state[2:0] == `SUSTAIN ) ? sustain_value_internal :
+                (state[2:0] == `RELEASE ) ? volume_d - release_rate : 
+                (state[2:0] == `BLANK) ? `VOLUME_RESET : 
+                volume_d;
 
 always @(posedge clk)
 if (rst==1'b1) begin
   latch_new_note <= 1'b0;
   latch_release_note <= 1'b0;
 end
-else
+else begin
   if (new_note_pulse == 1'b1)
     latch_new_note <= 1'b1;
-  else if (state[2:0] == `ATTACK)
+  if (release_note_pulse== 1'b1)
+    latch_release_note <= 1'b1; 
+	 
+  if (state[2:0] == `ATTACK && latch_new_note == 1'b1)
     latch_new_note <= 1'b0;
-  else if (release_note_pulse== 1'b1)
-    latch_release_note <= 1'b1;
-  else if(state[2:0] == `RELEASE ||
-          state[2:0] == `BLANK)
+  if((state[2:0] == `RELEASE || state[2:0] == `BLANK) && 
+     latch_release_note == 1'b1)
     latch_release_note <= 1'b0;
+
+end
 
 
 
 always @(posedge clk) begin
-   if (rst== 1'b1) begin
-	  state <= `BLANK;
-	  volume <= `VOLUME_RESET;
-	end
-	else
+  if (rst== 1'b1) begin
+    state <= `BLANK;
+    volume_d <= `VOLUME_RESET;
+  end
+  else
     begin	
-	 if (new_sample == 1'b1) begin
-	  case (state[2:0])
-	    `BLANK: 
-		   begin
-			  volume <= `VOLUME_RESET;
-			  if (latch_new_note == 1'b1)
-			    state[2:0] <= `ATTACK;
-			  else
-			    state[2:0] <= `BLANK;			 
-			end
-		 `ATTACK: 
-		   begin
-			  if ((volume + `VOLUME_MAX) < `VOLUME_MAX) begin
-			    volume <= volume + attack_rate;
-				 state[2:0] <= `ATTACK;
-			  end
-			  else
-			    begin
-			    volume <= `VOLUME_MAX;
-				 state[2:0] <= `DECAY;
-				 end
-		   end
-		 `DECAY:
-		 // TODO Handle the case were sustain_value is zero so we don't want 
-		 // to wait 'releas_note_event
-		   begin
-			 if (latch_new_note == 1'b1) begin
-			   state[2:0] <= `ATTACK;
-				volume <= volume;
-			 end
-			 else if (latch_release_note == 1'b1) begin
-			   state[2:0] <= `RELEASE;
-				volume <= volume;
-			 end
-			 else
-			   if ((volume - decay_rate)> sustain_value_internal) begin
-				  state[2:0] <= `DECAY;
-				  volume <= volume - decay_rate;
-				end
-				else begin
-				  state[2:0] <= `SUSTAIN;
-				  volume <= sustain_value_internal;
-				end
-			end
-		 `SUSTAIN:
-		    begin
-		    volume <= volume;
-		    if (latch_new_note == 1'b1)
-			   state[2:0] <= `ATTACK;
-			 else if (latch_release_note == 1'b1)
-			   state[2:0] <= `RELEASE;
-			 else
-            state[2:0]<= `SUSTAIN;
-          end				
-		 `RELEASE:
-		    begin
-            if (latch_new_note == 1'b1) begin
-			     state[2:0] <= `ATTACK;
-			 	  volume <= volume;
-				end
-				else 
-				if (volume > release_rate) begin
-				  volume <= volume - release_rate;
-				  state[2:0] <= `RELEASE;
-				end
-				else begin
-				  volume <= `VOLUME_RESET;
-				  state[2:0] <= `BLANK;
-				end
-          end
-	  endcase
+    if (new_sample == 1'b1) begin
+      volume_d <= volume;
+      case (state[2:0])
+	`BLANK: 
+	begin
+	  if (latch_new_note == 1'b1)
+	    state[2:0] <= `ATTACK;
+	  else
+	    state[2:0] <= `BLANK;			 
+	 end
+	`ATTACK: 
+	begin
+          if (volume < `VOLUME_MAX)
+	    state[2:0] <= `ATTACK;
+	  else
+	    state[2:0] <= `DECAY;
 	end
-	state[3] <= latch_new_note;
-	state[4] <= latch_release_note;
+	`DECAY:
+	begin
+	  if (latch_new_note == 1'b1)
+	    state[2:0] <= `ATTACK;
+	  else if (latch_release_note == 1'b1)
+	    state[2:0] <= `RELEASE;
+	  else if (volume > sustain_value_internal)
+	    state[2:0] <= `DECAY;
+	  else
+	    state[2:0] <= `SUSTAIN;
 	end
+	`SUSTAIN:
+	begin
+	if (latch_new_note == 1'b1)
+	  state[2:0] <= `ATTACK;
+	else if (latch_release_note == 1'b1)
+	  state[2:0] <= `RELEASE;
+	else
+	  state[2:0]<= `SUSTAIN;
+	end				
+	`RELEASE:
+	begin
+	  if (latch_new_note == 1'b1)
+	    state[2:0] <= `ATTACK;
+	  else if (volume > release_rate)
+	    state[2:0] <= `RELEASE;
+	  else 
+	    state[2:0] <= `BLANK;
+	end
+      endcase
+    end
+  state[3] <= latch_new_note;
+  state[4] <= latch_release_note;
+  end
 end
 
 
