@@ -31,8 +31,8 @@ snd_seq_t *open_seq() {
     fprintf(stdout, "Error opening ALSA sequencer.\n");
     exit(1);
   }
-  snd_seq_set_client_name(seq_handle, "ALSA Sequencer Demo");
-  if ((portid = snd_seq_create_simple_port(seq_handle, "ALSA Sequencer Demo",
+  snd_seq_set_client_name(seq_handle, "ALSA midi papilio interface");
+  if ((portid = snd_seq_create_simple_port(seq_handle, "ALSA midi papilio interface",
             SND_SEQ_PORT_CAP_WRITE|SND_SEQ_PORT_CAP_SUBS_WRITE,
             SND_SEQ_PORT_TYPE_APPLICATION)) < 0) {
     fprintf(stdout, "Error creating sequencer port.\n");
