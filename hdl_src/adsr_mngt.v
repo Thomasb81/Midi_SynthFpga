@@ -5,11 +5,9 @@ module adsr_mngt(
     input new_sample,
     input new_note_pulse,
     input release_note_pulse,
-    input [6:0] attack_rate,
-    input [6:0] decay_rate,
-    input [6:0] release_rate,
-    input [6:0] sustain_value,
-    output [17:0] volume,
+    input [17:0] sustain_value,
+    output reg [17:0] volume_d,
+    input [17:0] volume,
     output reg [4:0] state
     );
 
@@ -26,25 +24,8 @@ module adsr_mngt(
 
 `define VOLUME_SUSTAIN 18'h000C00
 
-wire [17:0] sustain_value_internal;
-//assign sustain_value_internal = `VOLUME_SUSTAIN;
-assign sustain_value_internal = {6'b000000,sustain_value,5'b00000};
-
-reg [17:0] volume_d;
 reg latch_new_note;
 reg latch_release_note;
-
-/*initial begin
-  latch_new_note = 1'b0;
-  latch_release_note = 1'b0;
-end*/
-
-assign volume = (state[2:0] == `ATTACK ) ? volume_d + attack_rate :
-                (state[2:0] == `DECAY ) ? volume_d - decay_rate :
-                (state[2:0] == `SUSTAIN ) ? sustain_value_internal :
-                (state[2:0] == `RELEASE ) ? volume_d - release_rate : 
-                (state[2:0] == `BLANK) ? `VOLUME_RESET : 
-                volume_d;
 
 always @(posedge clk)
 if (rst==1'b1) begin
@@ -86,7 +67,7 @@ always @(posedge clk) begin
 	 end
 	`ATTACK: 
 	begin
-          if (volume < `VOLUME_MAX)
+          if ( `VOLUME_RESET <= volume && volume < `VOLUME_MAX )
 	    state[2:0] <= `ATTACK;
 	  else
 	    state[2:0] <= `DECAY;
@@ -97,7 +78,7 @@ always @(posedge clk) begin
 	    state[2:0] <= `ATTACK;
 	  else if (latch_release_note == 1'b1)
 	    state[2:0] <= `RELEASE;
-	  else if (volume > sustain_value_internal)
+	  else if (volume > sustain_value)
 	    state[2:0] <= `DECAY;
 	  else
 	    state[2:0] <= `SUSTAIN;
@@ -115,7 +96,7 @@ always @(posedge clk) begin
 	begin
 	  if (latch_new_note == 1'b1)
 	    state[2:0] <= `ATTACK;
-	  else if (volume > release_rate)
+	  else if (volume > `VOLUME_RESET && volume[17] == 1'b0)
 	    state[2:0] <= `RELEASE;
 	  else 
 	    state[2:0] <= `BLANK;

@@ -150,6 +150,7 @@ architecture Behavioral of synth is
 		rst : IN std_logic;
 		ch0_r_new_sample : IN std_logic;
 		ch0_l_new_sample : IN std_logic;
+		ch0_volume_pulse : IN std_logic;
 		ch0_new_note_pulse : IN std_logic;
 		ch0_release_note_pulse : IN std_logic;
 		ch0_attack_rate : IN std_logic_vector(6 downto 0);
@@ -160,6 +161,7 @@ architecture Behavioral of synth is
 		ch0_input_sample_l : IN std_logic_vector(17 downto 0);
 		ch1_r_new_sample : IN std_logic;
 		ch1_l_new_sample : IN std_logic;
+		ch1_volume_pulse : IN std_logic;
 		ch1_new_note_pulse : IN std_logic;
 		ch1_release_note_pulse : IN std_logic;
 		ch1_attack_rate : IN std_logic_vector(6 downto 0);
@@ -170,6 +172,7 @@ architecture Behavioral of synth is
 		ch1_input_sample_l : IN std_logic_vector(17 downto 0);
 		ch2_r_new_sample : IN std_logic;
 		ch2_l_new_sample : IN std_logic;
+		ch2_volume_pulse : IN std_logic;
 		ch2_new_note_pulse : IN std_logic;
 		ch2_release_note_pulse : IN std_logic;
 		ch2_attack_rate : IN std_logic_vector(6 downto 0);
@@ -180,6 +183,7 @@ architecture Behavioral of synth is
 		ch2_input_sample_l : IN std_logic_vector(17 downto 0);
 		ch3_r_new_sample : IN std_logic;
 		ch3_l_new_sample : IN std_logic;
+		ch3_volume_pulse : IN std_logic;
 		ch3_new_note_pulse : IN std_logic;
 		ch3_release_note_pulse : IN std_logic;
 		ch3_attack_rate : IN std_logic_vector(6 downto 0);
@@ -190,6 +194,7 @@ architecture Behavioral of synth is
 		ch3_input_sample_l : IN std_logic_vector(17 downto 0);
 		ch4_r_new_sample : IN std_logic;
 		ch4_l_new_sample : IN std_logic;
+		ch4_volume_pulse : IN std_logic;
 		ch4_new_note_pulse : IN std_logic;
 		ch4_release_note_pulse : IN std_logic;
 		ch4_attack_rate : IN std_logic_vector(6 downto 0);
@@ -200,6 +205,7 @@ architecture Behavioral of synth is
 		ch4_input_sample_l : IN std_logic_vector(17 downto 0);
 		ch5_r_new_sample : IN std_logic;
 		ch5_l_new_sample : IN std_logic;
+		ch5_volume_pulse : IN std_logic;
 		ch5_new_note_pulse : IN std_logic;
 		ch5_release_note_pulse : IN std_logic;
 		ch5_attack_rate : IN std_logic_vector(6 downto 0);
@@ -210,6 +216,7 @@ architecture Behavioral of synth is
 		ch5_input_sample_l : IN std_logic_vector(17 downto 0);
 		ch6_r_new_sample : IN std_logic;
 		ch6_l_new_sample : IN std_logic;
+		ch6_volume_pulse : IN std_logic;
 		ch6_new_note_pulse : IN std_logic;
 		ch6_release_note_pulse : IN std_logic;
 		ch6_attack_rate : IN std_logic_vector(6 downto 0);
@@ -220,6 +227,7 @@ architecture Behavioral of synth is
 		ch6_input_sample_l : IN std_logic_vector(17 downto 0);
 		ch7_r_new_sample : IN std_logic;
 		ch7_l_new_sample : IN std_logic;
+		ch7_volume_pulse : IN std_logic;
 		ch7_new_note_pulse : IN std_logic;
 		ch7_release_note_pulse : IN std_logic;
 		ch7_attack_rate : IN std_logic_vector(6 downto 0);
@@ -230,6 +238,7 @@ architecture Behavioral of synth is
 		ch7_input_sample_l : IN std_logic_vector(17 downto 0);
 		ch8_r_new_sample : IN std_logic;
 		ch8_l_new_sample : IN std_logic;
+		ch8_volume_pulse : IN std_logic;
 		ch8_new_note_pulse : IN std_logic;
 		ch8_release_note_pulse : IN std_logic;
 		ch8_attack_rate : IN std_logic_vector(6 downto 0);
@@ -240,6 +249,7 @@ architecture Behavioral of synth is
 		ch8_input_sample_l : IN std_logic_vector(17 downto 0);
 		ch9_r_new_sample : IN std_logic;
 		ch9_l_new_sample : IN std_logic;
+		ch9_volume_pulse : IN std_logic;
 		ch9_new_note_pulse : IN std_logic;
 		ch9_release_note_pulse : IN std_logic;
 		ch9_attack_rate : IN std_logic_vector(6 downto 0);
@@ -250,6 +260,7 @@ architecture Behavioral of synth is
 		ch9_input_sample_l : IN std_logic_vector(17 downto 0);
 		ch10_r_new_sample : IN std_logic;
 		ch10_l_new_sample : IN std_logic;
+		ch10_volume_pulse : IN std_logic;
 		ch10_new_note_pulse : IN std_logic;
 		ch10_release_note_pulse : IN std_logic;
 		ch10_attack_rate : IN std_logic_vector(6 downto 0);
@@ -260,6 +271,7 @@ architecture Behavioral of synth is
 		ch10_input_sample_l : IN std_logic_vector(17 downto 0);
 		ch11_r_new_sample : IN std_logic;
 		ch11_l_new_sample : IN std_logic;
+		ch11_volume_pulse : IN std_logic;
 		ch11_new_note_pulse : IN std_logic;
 		ch11_release_note_pulse : IN std_logic;
 		ch11_attack_rate : IN std_logic_vector(6 downto 0);
@@ -270,6 +282,7 @@ architecture Behavioral of synth is
 		ch11_input_sample_l : IN std_logic_vector(17 downto 0);
 		ch12_r_new_sample : IN std_logic;
 		ch12_l_new_sample : IN std_logic;
+		ch12_volume_pulse : IN std_logic;
 		ch12_new_note_pulse : IN std_logic;
 		ch12_release_note_pulse : IN std_logic;
 		ch12_attack_rate : IN std_logic_vector(6 downto 0);
@@ -280,6 +293,7 @@ architecture Behavioral of synth is
 		ch12_input_sample_l : IN std_logic_vector(17 downto 0);
 		ch13_r_new_sample : IN std_logic;
 		ch13_l_new_sample : IN std_logic;
+		ch13_volume_pulse : IN std_logic;
 		ch13_new_note_pulse : IN std_logic;
 		ch13_release_note_pulse : IN std_logic;
 		ch13_attack_rate : IN std_logic_vector(6 downto 0);
@@ -290,6 +304,7 @@ architecture Behavioral of synth is
 		ch13_input_sample_l : IN std_logic_vector(17 downto 0);
 		ch14_r_new_sample : IN std_logic;
 		ch14_l_new_sample : IN std_logic;
+		ch14_volume_pulse : IN std_logic;
 		ch14_new_note_pulse : IN std_logic;
 		ch14_release_note_pulse : IN std_logic;
 		ch14_attack_rate : IN std_logic_vector(6 downto 0);
@@ -300,6 +315,7 @@ architecture Behavioral of synth is
 		ch14_input_sample_l : IN std_logic_vector(17 downto 0);
 		ch15_r_new_sample : IN std_logic;
 		ch15_l_new_sample : IN std_logic;
+		ch15_volume_pulse : IN std_logic;
 		ch15_new_note_pulse : IN std_logic;
 		ch15_release_note_pulse : IN std_logic;
 		ch15_attack_rate : IN std_logic_vector(6 downto 0);
@@ -312,51 +328,67 @@ architecture Behavioral of synth is
 		ch0_output_sample_r : OUT std_logic_vector(17 downto 0);
 		ch0_output_sample_l : OUT std_logic_vector(17 downto 0);
 		ch0_state : OUT std_logic_vector(4 downto 0);
+		ch0_volume_d : OUT std_logic_vector(17 downto 0);
 		ch1_output_sample_r : OUT std_logic_vector(17 downto 0);
 		ch1_output_sample_l : OUT std_logic_vector(17 downto 0);
 		ch1_state : OUT std_logic_vector(4 downto 0);
+		ch1_volume_d : OUT std_logic_vector(17 downto 0);
 		ch2_output_sample_r : OUT std_logic_vector(17 downto 0);
 		ch2_output_sample_l : OUT std_logic_vector(17 downto 0);
 		ch2_state : OUT std_logic_vector(4 downto 0);
+		ch2_volume_d : OUT std_logic_vector(17 downto 0);
 		ch3_output_sample_r : OUT std_logic_vector(17 downto 0);
 		ch3_output_sample_l : OUT std_logic_vector(17 downto 0);
 		ch3_state : OUT std_logic_vector(4 downto 0);
+		ch3_volume_d : OUT std_logic_vector(17 downto 0);
 		ch4_output_sample_r : OUT std_logic_vector(17 downto 0);
 		ch4_output_sample_l : OUT std_logic_vector(17 downto 0);
 		ch4_state : OUT std_logic_vector(4 downto 0);
+		ch4_volume_d : OUT std_logic_vector(17 downto 0);
 		ch5_output_sample_r : OUT std_logic_vector(17 downto 0);
 		ch5_output_sample_l : OUT std_logic_vector(17 downto 0);
 		ch5_state : OUT std_logic_vector(4 downto 0);
+		ch5_volume_d : OUT std_logic_vector(17 downto 0);
 		ch6_output_sample_r : OUT std_logic_vector(17 downto 0);
 		ch6_output_sample_l : OUT std_logic_vector(17 downto 0);
 		ch6_state : OUT std_logic_vector(4 downto 0);
+		ch6_volume_d : OUT std_logic_vector(17 downto 0);
 		ch7_output_sample_r : OUT std_logic_vector(17 downto 0);
 		ch7_output_sample_l : OUT std_logic_vector(17 downto 0);
 		ch7_state : OUT std_logic_vector(4 downto 0);
+		ch7_volume_d : OUT std_logic_vector(17 downto 0);
 		ch8_output_sample_r : OUT std_logic_vector(17 downto 0);
 		ch8_output_sample_l : OUT std_logic_vector(17 downto 0);
 		ch8_state : OUT std_logic_vector(4 downto 0);
+		ch8_volume_d : OUT std_logic_vector(17 downto 0);
 		ch9_output_sample_r : OUT std_logic_vector(17 downto 0);
 		ch9_output_sample_l : OUT std_logic_vector(17 downto 0);
 		ch9_state : OUT std_logic_vector(4 downto 0);
+		ch9_volume_d : OUT std_logic_vector(17 downto 0);
 		ch10_output_sample_r : OUT std_logic_vector(17 downto 0);
 		ch10_output_sample_l : OUT std_logic_vector(17 downto 0);
 		ch10_state : OUT std_logic_vector(4 downto 0);
+		ch10_volume_d : OUT std_logic_vector(17 downto 0);
 		ch11_output_sample_r : OUT std_logic_vector(17 downto 0);
 		ch11_output_sample_l : OUT std_logic_vector(17 downto 0);
 		ch11_state : OUT std_logic_vector(4 downto 0);
+		ch11_volume_d : OUT std_logic_vector(17 downto 0);
 		ch12_output_sample_r : OUT std_logic_vector(17 downto 0);
 		ch12_output_sample_l : OUT std_logic_vector(17 downto 0);
 		ch12_state : OUT std_logic_vector(4 downto 0);
+		ch12_volume_d : OUT std_logic_vector(17 downto 0);
 		ch13_output_sample_r : OUT std_logic_vector(17 downto 0);
 		ch13_output_sample_l : OUT std_logic_vector(17 downto 0);
 		ch13_state : OUT std_logic_vector(4 downto 0);
+		ch13_volume_d : OUT std_logic_vector(17 downto 0);
 		ch14_output_sample_r : OUT std_logic_vector(17 downto 0);
 		ch14_output_sample_l : OUT std_logic_vector(17 downto 0);
 		ch14_state : OUT std_logic_vector(4 downto 0);
+		ch14_volume_d : OUT std_logic_vector(17 downto 0);
 		ch15_output_sample_r : OUT std_logic_vector(17 downto 0);
 		ch15_output_sample_l : OUT std_logic_vector(17 downto 0);
-		ch15_state : OUT std_logic_vector(4 downto 0)
+		ch15_state : OUT std_logic_vector(4 downto 0);
+		ch15_volume_d : OUT std_logic_vector(17 downto 0)
 		);
 	END COMPONENT;
 
@@ -422,7 +454,7 @@ architecture Behavioral of synth is
 	PORT(
 		clk : IN std_logic;
 		rst : IN std_logic;          
-		events : OUT std_logic_vector(36 downto 0)
+		events : OUT std_logic_vector(47 downto 0)
 		);
 	END COMPONENT;
 
@@ -740,7 +772,7 @@ architecture Behavioral of synth is
    signal release_rate  : std_logic_vector( 6 downto 0);
   
 
-   signal events : std_logic_vector (36 downto 0);	
+   signal events : std_logic_vector (47 downto 0);	
 
    signal ch17 : std_logic; -- dummy
 
@@ -1101,8 +1133,9 @@ PORT MAP(
 		clk => clk32,
 		rst => rst,
 		error => open,
-		ch0_r_new_sample => events(3),
-		ch0_l_new_sample => events(4),
+		ch0_r_new_sample => events(0),
+		ch0_l_new_sample => events(1),
+      ch0_volume_pulse => events(2),
 		ch0_new_note_pulse => ch0_note_pressed,
 		ch0_release_note_pulse => ch0_note_released,
 		ch0_attack_rate => ch0_velocity,
@@ -1114,9 +1147,11 @@ PORT MAP(
 		ch0_input_sample_l => ch0_waves_out_l,
 		ch0_output_sample_l => ch0_sound_l,
 		ch0_state => ch0_adsr_state,
+		ch0_volume_d => open,
 		
-                ch1_r_new_sample => events(5),
-		ch1_l_new_sample => events(6),
+      ch1_r_new_sample => events(3),
+		ch1_l_new_sample => events(4),
+		ch1_volume_pulse => events(5),
 		ch1_new_note_pulse => ch1_note_pressed,
 		ch1_release_note_pulse => ch1_note_released,
 		ch1_attack_rate => ch1_velocity,
@@ -1128,9 +1163,11 @@ PORT MAP(
 		ch1_input_sample_l => ch1_waves_out_l,
 		ch1_output_sample_l => ch1_sound_l,
 		ch1_state => ch1_adsr_state,
+		ch1_volume_d => open,
 		
-                ch2_r_new_sample => events(7),
-		ch2_l_new_sample => events(8),
+      ch2_r_new_sample => events(6),
+		ch2_l_new_sample => events(7),
+		ch2_volume_pulse => events(8),
 		ch2_new_note_pulse => ch2_note_pressed,
 		ch2_release_note_pulse => ch2_note_released,
 		ch2_attack_rate => ch2_velocity,
@@ -1142,9 +1179,11 @@ PORT MAP(
 		ch2_input_sample_l => ch2_waves_out_l,
 		ch2_output_sample_l => ch2_sound_l,
 		ch2_state => ch2_adsr_state,
+		ch2_volume_d => open,
 
 		ch3_r_new_sample => events(9),
 		ch3_l_new_sample => events(10),
+		ch3_volume_pulse => events(11),
 		ch3_new_note_pulse => ch3_note_pressed,
 		ch3_release_note_pulse => ch3_note_released,
 		ch3_attack_rate => ch3_velocity,
@@ -1156,9 +1195,11 @@ PORT MAP(
 		ch3_input_sample_l => ch3_waves_out_l,
 		ch3_output_sample_l => ch3_sound_l,
 		ch3_state => ch3_adsr_state,
+		ch3_volume_d => open,
 
-		ch4_r_new_sample => events(11),
-		ch4_l_new_sample => events(12),
+		ch4_r_new_sample => events(12),
+		ch4_l_new_sample => events(13),
+		ch4_volume_pulse => events(14),
 		ch4_new_note_pulse => ch4_note_pressed,
 		ch4_release_note_pulse => ch4_note_released,
 		ch4_attack_rate => ch4_velocity,
@@ -1170,9 +1211,11 @@ PORT MAP(
 		ch4_input_sample_l => ch4_waves_out_l,
 		ch4_output_sample_l => ch4_sound_l,
 		ch4_state => ch4_adsr_state,
+		ch4_volume_d => open,
 
-		ch5_r_new_sample => events(13),
-		ch5_l_new_sample => events(14),
+		ch5_r_new_sample => events(15),
+		ch5_l_new_sample => events(16),
+		ch5_volume_pulse => events(17),
 		ch5_new_note_pulse => ch5_note_pressed,
 		ch5_release_note_pulse => ch5_note_released,
 		ch5_attack_rate => ch5_velocity,
@@ -1184,9 +1227,11 @@ PORT MAP(
 		ch5_input_sample_l => ch5_waves_out_l,
 		ch5_output_sample_l => ch5_sound_l,
 		ch5_state => ch5_adsr_state,
-		ch6_r_new_sample => events(15),
-		ch6_l_new_sample => events(16),
-
+		ch5_volume_d => open,
+		
+		ch6_r_new_sample => events(18),
+		ch6_l_new_sample => events(19),
+      ch6_volume_pulse => events(20),
 		ch6_new_note_pulse => ch6_note_pressed,
 		ch6_release_note_pulse => ch6_note_released,
 		ch6_attack_rate => ch6_velocity,
@@ -1198,9 +1243,12 @@ PORT MAP(
 		ch6_input_sample_l => ch6_waves_out_l,
 		ch6_output_sample_l => ch6_sound_l,
 		ch6_state => ch6_adsr_state,
+		ch6_volume_d => open,
+		
 
-		ch7_r_new_sample => events(17),
-		ch7_l_new_sample => events(18),
+		ch7_r_new_sample => events(21),
+		ch7_l_new_sample => events(22),
+		ch7_volume_pulse => events(23),
 		ch7_new_note_pulse => ch7_note_pressed,
 		ch7_release_note_pulse => ch7_note_released,
 		ch7_attack_rate => ch7_velocity,
@@ -1212,9 +1260,11 @@ PORT MAP(
 		ch7_input_sample_l => ch7_waves_out_l,
 		ch7_output_sample_l => ch7_sound_l,
 		ch7_state => ch7_adsr_state,
+		ch7_volume_d => open,
 
-		ch8_r_new_sample => events(19),
-		ch8_l_new_sample => events(20),
+		ch8_r_new_sample => events(24),
+		ch8_l_new_sample => events(25),
+		ch8_volume_pulse => events(26),
 		ch8_new_note_pulse => ch8_note_pressed,
 		ch8_release_note_pulse => ch8_note_released,
 		ch8_attack_rate => ch8_velocity,
@@ -1226,9 +1276,11 @@ PORT MAP(
 		ch8_input_sample_l => ch8_waves_out_l,
 		ch8_output_sample_l => ch8_sound_l,
 		ch8_state => ch8_adsr_state,
+		ch8_volume_d => open,
 
-		ch9_r_new_sample => events(21),
-		ch9_l_new_sample => events(22),
+		ch9_r_new_sample => events(27),
+		ch9_l_new_sample => events(28),
+		ch9_volume_pulse => events(29),
 		ch9_new_note_pulse => ch9_note_pressed,
 		ch9_release_note_pulse => ch9_note_released,
 		ch9_attack_rate => ch9_velocity,
@@ -1240,9 +1292,11 @@ PORT MAP(
 		ch9_input_sample_l => ch9_waves_out_l,
 		ch9_output_sample_l => ch9_sound_l,
 		ch9_state => ch9_adsr_state,
+		ch9_volume_d => open,
 
-		ch10_r_new_sample => events(23),
-		ch10_l_new_sample => events(24),
+		ch10_r_new_sample => events(30),
+		ch10_l_new_sample => events(31),
+		ch10_volume_pulse => events(32),
 		ch10_new_note_pulse => ch10_note_pressed,
 		ch10_release_note_pulse => ch10_note_released,
 		ch10_attack_rate => ch10_velocity,
@@ -1254,9 +1308,11 @@ PORT MAP(
 		ch10_input_sample_l => ch10_waves_out_l,
 		ch10_output_sample_l => ch10_sound_l,
 		ch10_state => ch10_adsr_state,
+		ch10_volume_d => open,
 
-		ch11_r_new_sample => events(25),
-		ch11_l_new_sample => events(26),
+		ch11_r_new_sample => events(33),
+		ch11_l_new_sample => events(34),
+		ch11_volume_pulse => events(35),
 		ch11_new_note_pulse => ch11_note_pressed,
 		ch11_release_note_pulse => ch11_note_released,
 		ch11_attack_rate => ch11_velocity,
@@ -1268,9 +1324,11 @@ PORT MAP(
 		ch11_input_sample_l => ch11_waves_out_l,
 		ch11_output_sample_l => ch11_sound_l,
 		ch11_state => ch11_adsr_state,
+		ch11_volume_d => open,
 
-		ch12_r_new_sample => events(27),
-		ch12_l_new_sample => events(28),
+		ch12_r_new_sample => events(36),
+		ch12_l_new_sample => events(37),
+		ch12_volume_pulse => events(38),
 		ch12_new_note_pulse => ch12_note_pressed,
 		ch12_release_note_pulse => ch12_note_released,
 		ch12_attack_rate => ch12_velocity,
@@ -1282,9 +1340,11 @@ PORT MAP(
 		ch12_input_sample_l => ch12_waves_out_l,
 		ch12_output_sample_l => ch12_sound_l,
 		ch12_state => ch12_adsr_state,
+		ch12_volume_d => open,
 
-		ch13_r_new_sample => events(29),
-		ch13_l_new_sample => events(30),
+		ch13_r_new_sample => events(39),
+		ch13_l_new_sample => events(40),
+		ch13_volume_pulse => events(41),
 		ch13_new_note_pulse => ch13_note_pressed,
 		ch13_release_note_pulse => ch13_note_released,
 		ch13_attack_rate => ch13_velocity,
@@ -1296,9 +1356,11 @@ PORT MAP(
 		ch13_input_sample_l => ch13_waves_out_l,
 		ch13_output_sample_l => ch13_sound_l,
 		ch13_state => ch13_adsr_state,
+		ch13_volume_d => open,
 
-		ch14_r_new_sample => events(31),
-		ch14_l_new_sample => events(32),
+		ch14_r_new_sample => events(42),
+		ch14_l_new_sample => events(43),
+		ch14_volume_pulse => events(44),
 		ch14_new_note_pulse => ch14_note_pressed,
 		ch14_release_note_pulse => ch14_note_released,
 		ch14_attack_rate => ch14_velocity,
@@ -1310,9 +1372,11 @@ PORT MAP(
 		ch14_input_sample_l => ch14_waves_out_l,
 		ch14_output_sample_l => ch14_sound_l,
 		ch14_state => ch14_adsr_state,
+		ch14_volume_d => open,
 
-		ch15_r_new_sample => events(33),
-		ch15_l_new_sample => events(34),
+		ch15_r_new_sample => events(45),
+		ch15_l_new_sample => events(46),
+		ch15_volume_pulse => events(47),
 		ch15_new_note_pulse => ch15_note_pressed,
 		ch15_release_note_pulse => ch15_note_released,
 		ch15_attack_rate => ch15_velocity,
@@ -1323,7 +1387,8 @@ PORT MAP(
 		ch15_output_sample_r => ch15_sound_r,
 		ch15_input_sample_l => ch15_waves_out_l,
 		ch15_output_sample_l => ch15_sound_l,
-		ch15_state => ch15_adsr_state
+		ch15_state => ch15_adsr_state,
+		ch15_volume_d => open
 		);
 
 
@@ -1548,82 +1613,82 @@ elsif (note_released = '1')then
 case channel is
 when "0000" => 
 ch0_note <= note_interface;
-ch0_velocity <= velocity;
+--ch0_velocity <= velocity;
 ch0_note_released <= '1';
 ch0_note_pressed <= '0';
 when "0001" => 
 ch1_note <= note_interface;
-ch1_velocity <= velocity;
+--ch1_velocity <= velocity;
 ch1_note_released <= '1';
 ch1_note_pressed <= '0';
 when "0010" => 
 ch2_note <= note_interface;
-ch2_velocity <= velocity;
+--ch2_velocity <= velocity;
 ch2_note_released <= '1';
 ch2_note_pressed <= '0';
 when "0011" => 
 ch3_note <= note_interface;
-ch3_velocity <= velocity;
+--ch3_velocity <= velocity;
 ch3_note_released <= '1';
 ch3_note_pressed <= '0';
 when "0100" => 
 ch4_note <= note_interface;
-ch4_velocity <= velocity;
+--ch4_velocity <= velocity;
 ch4_note_released <= '1';
 ch4_note_pressed <= '0';
 when "0101" => 
 ch5_note <= note_interface;
-ch5_velocity <= velocity;
+--ch5_velocity <= velocity;
 ch5_note_released <= '1';
 ch5_note_pressed <= '0';
 when "0110" => 
 ch6_note <= note_interface;
-ch6_velocity <= velocity;
+--ch6_velocity <= velocity;
 ch6_note_released <= '1';
 ch6_note_pressed <= '0';
 when "0111" => 
 ch7_note <= note_interface;
-ch7_velocity <= velocity;
+--ch7_velocity <= velocity;
 ch7_note_released <= '1';
 ch7_note_pressed <= '0';
 when "1000" => 
 ch8_note <= note_interface;
-ch8_velocity <= velocity;
+--ch8_velocity <= velocity;
 ch8_note_released <= '1';
 ch8_note_pressed <= '0';
 when "1001" => 
 ch9_note <= note_interface;
-ch9_velocity <= velocity;
+--ch9_velocity <= velocity;
 ch9_note_released <= '1';
 ch9_note_pressed <= '0';
 when "1010" => 
 ch10_note <= note_interface;
-ch10_velocity <= velocity;
+--ch10_velocity <= velocity;
 ch10_note_released <= '1';
 ch10_note_pressed <= '0';
 when "1011" => 
 ch11_note <= note_interface;
-ch11_velocity <= velocity;
+--ch11_velocity <= velocity;
 ch11_note_released <= '1';
 ch11_note_pressed <= '0';
 when "1100" => 
 ch12_note <= note_interface;
-ch12_velocity <= velocity;
+--ch12_velocity <= velocity;
 ch12_note_released <= '1';
 ch12_note_pressed <= '0';
 when "1101" => 
 ch13_note <= note_interface;
-ch13_velocity <= velocity;
+--ch13_velocity <= velocity;
 ch13_note_released <= '1';
 ch13_note_pressed <= '0';
 when "1110" => 
 ch14_note <= note_interface;
-ch14_velocity <= velocity;
+--ch14_velocity <= velocity;
 ch14_note_released <= '1';
 ch14_note_pressed <= '0';
 when "1111" => 
 ch15_note <= note_interface;
-ch15_velocity <= velocity;
+--ch15_velocity <= velocity;
 ch15_note_released <= '1';
 ch15_note_pressed <= '0';
 when others => ch17 <= '1';
