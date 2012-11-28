@@ -9,6 +9,9 @@
 #include <stdint.h>
 #include "serialib.h"
 
+#include "stats.h"
+
+
 #define FPRINTF_MIDI_EVENT(...) fprintf(stdout,__VA_ARGS__)
 //#define FPRINTF_MIDI_EVENT(...) 
 
@@ -16,8 +19,9 @@
 serialib ttyusb1;
 char buffer[3];
 
-int channel[16];
-int channel_log[16];
+stats db;
+
+
 
 snd_seq_t *open_seq();
 void midi_action(snd_seq_t *seq_handle);
@@ -70,10 +74,7 @@ void midi_action(snd_seq_t *seq_handle) {
         buffer[1] = (uint8_t) ev->data.note.note & 0x7f;
         buffer[2] = (uint8_t) ev->data.note.velocity & 0x7f;
         ttyusb1.Write(&buffer,3);
-        if (channel[ev->data.note.channel & 0xf] != 0) {
-          channel_log[ev->data.note.channel & 0xf] += 1;
-        }
-        channel[ev->data.note.channel & 0xf] += 1;
+        db.note_on( ev->data.control.channel,ev->data.note.note);
         break;        
       case SND_SEQ_EVENT_NOTEOFF: 
         FPRINTF_MIDI_EVENT( "note off event on Channel %2d: note channel %2d, note %2d, velocity %2d, off_velocity %2d, duration %d\n",
@@ -84,7 +85,7 @@ void midi_action(snd_seq_t *seq_handle) {
         buffer[1] = (uint8_t) ev->data.note.note & 0x7f;
         buffer[2] = (uint8_t) ev->data.note.velocity & 0x7f;
         ttyusb1.Write(&buffer,3);
-        channel[ev->data.note.channel & 0xf] -= 1;
+        db.note_off( ev->data.control.channel,ev->data.note.note);
         break;        
       case SND_SEQ_EVENT_KEYPRESS:
         FPRINTF_MIDI_EVENT( "keypress event on Channel %2d, note: %5d, velocity %d       \n",
@@ -231,18 +232,17 @@ void midi_action(snd_seq_t *seq_handle) {
       case SND_SEQ_EVENT_PORT_SUBSCRIBED :
         FPRINTF_MIDI_EVENT( "Ports connected event on Channel %2d\n", 
                 ev->data.control.channel);
-	for (uint8_t i=0; i<16; i++) {
-		channel[i] = 0;
-		channel_log[i] = 0;
-	}
+        db.reset();
 	break;
       case SND_SEQ_EVENT_PORT_UNSUBSCRIBED :
 	FPRINTF_MIDI_EVENT( "Ports disconnected event on Channel %2d\n", 
 			ev->data.control.channel);
 	for (uint8_t i=0; i<16; i++){
-		fprintf(stdout,"channel[%i] = %i indice(%i)\n",
-                        i,channel[i],channel_log[i]);
+		fprintf(stdout,"channel[%i] max note(%i)\n",
+                        i,db.note_channel_max[i]);
 	}
+        fprintf(stdout,"Max number of note all channel, in the same time : %i\n",db.all_channel);
+        
 	break;
       case SND_SEQ_EVENT_USR0 :
 	FPRINTF_MIDI_EVENT( "USR0 defined event on Channel %2d\n", 
