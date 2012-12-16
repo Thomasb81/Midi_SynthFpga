@@ -41,7 +41,7 @@ DCM0 clk_builder0 (
     .CLK0_OUT(clk32)
     );
 	 
-synth synth0 (
+synth2 synth0 (
     .clk32(clk32), 
     .rst(rst),
     
