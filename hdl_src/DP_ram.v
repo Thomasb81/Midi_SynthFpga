@@ -35,7 +35,7 @@
 
 module DP_ram (
   clka, rsta, clkb, rstb, wea, addra, dina, web, addrb, dinb, douta, doutb
-)/* synthesis syn_black_box syn_noprune=1 */;
+);
   input clka;
   input rsta;
   input clkb;
@@ -48,9 +48,7 @@ module DP_ram (
   input [71 : 0] dinb;
   output [71 : 0] douta;
   output [71 : 0] doutb;
-  
-  // synthesis translate_off
-  
+
   wire N0;
   wire N1;
   VCC   XST_VCC (
@@ -276,7 +274,6 @@ doutb[42], doutb[41], doutb[40], doutb[39], doutb[38], doutb[37], doutb[36]}),
     .DOPB({doutb[71], doutb[62], doutb[53], doutb[44]})
   );
 
-// synthesis translate_on
 
 endmodule
 

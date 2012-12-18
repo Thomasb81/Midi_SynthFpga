@@ -55,7 +55,7 @@ synth2 synth0 (
 	 
 	 .audio_r(audio_r),
 	 .audio_l(audio_l),
-    .state({led3,led2,led1}),
+    .state({led4,led3,led2,led1}),
 	 .read_back(read),
 	 .data(data_w)
     );
@@ -115,7 +115,7 @@ midi_ctrl midi_ctrl (
 	 .read(read)
     );
 
-assign led4 = (velocity == 7'b0000000)? 1 : 0;
+//assign led4 = (velocity == 7'b0000000)? 1 : 0;
 
 // Reset part ! close your eyes or you will be chocked :)
 always @(posedge clk96m) begin

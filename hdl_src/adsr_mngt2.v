@@ -20,10 +20,10 @@ module adsr_mngt2(
 `define RELEASE 3'd4
 `define BLANK 3'd0
 
-//`define VOLUME_RESET 18'h00000
-`define VOLUME_RESET 18'h00800
-`define VOLUME_MAX 18'h01000
-//`define VOLUME_MAX 18'h1FFFF
+`define VOLUME_RESET 18'h00000
+//`define VOLUME_RESET 18'h00800
+//`define VOLUME_MAX 18'h01000
+`define VOLUME_MAX 18'h1FFFF
 
 wire [17:0] sustain_value_internal;
 

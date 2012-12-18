@@ -21,6 +21,13 @@ char buffer[3];
 
 stats db;
 
+void printf_m(char * buf) {
+  fprintf(stdout,"## begin ##\n");
+  fprintf(stdout,"ser.write(struct.pack('B',0x%02x))\n",(uint8_t) (0xff & buf[0]));
+  fprintf(stdout,"ser.write(struct.pack('B',0x%02x))\n",buf[1]);
+  fprintf(stdout,"ser.write(struct.pack('B',0x%02x))\n",buf[2]);
+  fprintf(stdout,"## end ##\n");
+}
 
 
 snd_seq_t *open_seq();
@@ -74,6 +81,7 @@ void midi_action(snd_seq_t *seq_handle) {
         buffer[1] = (uint8_t) ev->data.note.note & 0x7f;
         buffer[2] = (uint8_t) ev->data.note.velocity & 0x7f;
         ttyusb1.Write(&buffer,3);
+        printf_m(buffer);
         db.note_on( ev->data.control.channel,ev->data.note.note);
         break;        
       case SND_SEQ_EVENT_NOTEOFF: 
@@ -85,6 +93,7 @@ void midi_action(snd_seq_t *seq_handle) {
         buffer[1] = (uint8_t) ev->data.note.note & 0x7f;
         buffer[2] = (uint8_t) ev->data.note.velocity & 0x7f;
         ttyusb1.Write(&buffer,3);
+        printf_m(buffer);
         db.note_off( ev->data.control.channel,ev->data.note.note);
         break;        
       case SND_SEQ_EVENT_KEYPRESS:

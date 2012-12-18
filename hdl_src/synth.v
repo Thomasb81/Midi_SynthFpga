@@ -11,9 +11,9 @@ module synth2(
   input [3:0] channel,
   output audio_r, 
   output audio_l,
-  output [2:0] state,
+  output[3:0] state,
   input read_back,
-  output [7:0] data
+  output reg [7:0] data
 );
 
 `define ATTACK 3'd1
@@ -27,12 +27,16 @@ module synth2(
 `define SAMPLE_READ 2'd2
 `define SAMPLE_WRITE 2'd3
 
-`define CTRL_IDLE 2'd0
-`define CTRL_SEARCH_SET_ADDR 2'd1
-`define CTRL_SEARCH_WRITE_ADDR 2'd2
-
+`define CTRL_IDLE 3'd1
+`define CTRL_SEARCH_NOTEON 3'd2
+`define CTRL_FIND_NOTEON 3'd3
+`define CTRL_SEARCH_NOTEOFF 3'd4
+`define CTRL_FIND_NOTEOFF 3'd5
+`define CTRL_ERROR 3'd6
+`define CTRL_WAIT 3'd7
 
 reg [7:0] addr_ctrl;
+reg [7:0] store_addr_ctrl;
 reg we_ctrl;
 wire [71:0] dataout_ctrl;
 wire [71:0] datain_ctrl;
@@ -42,16 +46,27 @@ reg we_sample;
 wire [71:0] dataout_sample;
 wire [71:0] datain_sample;
 
+reg error_log;
 reg [10:0] count;
+reg [15:0] count_cmd = 16'h0000;
 
-wire [6:0] note_ctrl;
-wire [3:0] channel_ctrl;
-wire [6:0] velocity_ctrl;
-wire [17:0] volume_ctrl;
-wire [18:0] wavetable_ctrl;
-wire note_press_ctrl;
-wire note_release_ctrl;
-wire [2:0] adsr_state_ctrl;
+wire [6:0] note_ctrl_r;
+wire [3:0] channel_ctrl_r;
+wire [6:0] velocity_ctrl_r;
+wire [17:0] volume_ctrl_r;
+wire [18:0] wavetable_ctrl_r;
+wire note_press_ctrl_r;
+wire note_release_ctrl_r;
+wire [2:0] adsr_state_ctrl_r;
+
+reg [6:0] note_ctrl_w;
+reg [3:0] channel_ctrl_w;
+reg [6:0] velocity_ctrl_w;
+reg [17:0] volume_ctrl_w;
+reg [18:0] wavetable_ctrl_w;
+reg note_press_ctrl_w;
+reg note_release_ctrl_w;
+reg [2:0] adsr_state_ctrl_w;
 
 wire [6:0] note_sample_r;
 wire [3:0] channel_sample_r;
@@ -67,7 +82,6 @@ reg note_pressed_sample_w;
 reg note_released_sample_w;
 reg [2:0] adsr_state_sample_w;
 
-
 wire [17:0] wave_advance;
 wire [2:0] adsr_state;
 wire note_pressed_cal;
@@ -75,8 +89,7 @@ wire note_released_cal;
 wire [17:0] volume_cal;
 
 reg [1:0] sample_state;
-reg [1:0] ctrl_state;
-
+reg [2:0] ctrl_state;
 
 wire [6:0] note_interface_fifoout;
 wire [6:0] velocity_fifoout;
@@ -86,14 +99,36 @@ wire note_released_fifoout;
 wire note_keypress_fifoout;
 wire note_channelpress_fifoout;
 
+wire [9:0] wavetable_4left;
+
 wire [11:0] dummy_12bits_ctrl;
 wire [11:0] dummy_12bits_sample;
+
+wire [17:0] sound_r;
+wire [17:0] sound_l;
+
+always @(posedge clk32) begin
+  if (rst == 1'b1) begin
+  data <= 8'h00;
+  end
+  else if (read_back == 1'b1) begin
+    if (velocity == 7'h00)
+	   data <= count_cmd[15:8];
+	 else if (velocity == 7'h01)
+	   data <= count_cmd[7:0];
+	 else
+	   data <= 8'h55;
+  end
+end
+  
+
 
 fifo fifo0 (
   .clk(clk32), // input clk
   .srst(rst), // input srst
   .din({note_interface,velocity,channel,note_pressed,note_released,note_keypress,note_channelpress}), // input [21 : 0] din
-  .wr_en(note_pressed|note_released|note_keypress|note_channelpress), // input wr_en
+  //.wr_en(note_pressed|note_released|note_keypress|note_channelpress), // input wr_en
+  .wr_en(note_pressed|note_released), // input wr_en
   .rd_en(we_ctrl), // input rd_en
   .dout(
   {note_interface_fifoout,
@@ -108,60 +143,148 @@ fifo fifo0 (
   .empty(empty) // output empty
 );
 
+assign state[3] = note_pressed_fifoout;
+assign state[2:0] = ctrl_state;
 
-assign {wavetable_ctrl,
-        volume_ctrl,
-		  note_ctrl,
-		  channel_ctrl,
-		  velocity_ctrl,
-        note_press_ctrl,
-		  note_release_ctrl,
-		  adsr_state_ctrl,
+assign {wavetable_ctrl_r,
+        volume_ctrl_r,
+		  note_ctrl_r,
+		  channel_ctrl_r,
+		  velocity_ctrl_r,
+        note_press_ctrl_r,
+		  note_release_ctrl_r,
+		  adsr_state_ctrl_r,
 		  dummy_12bits_ctrl} = dataout_ctrl;
 assign datain_ctrl = {
-        wavetable_ctrl,
-		  volume_ctrl,
-		  note_interface_fifoout,
-		  channel_fifoout,
-		  velocity_fifoout,
-		  note_pressed_fifoout,
-		  note_released_fifoout,
-		  adsr_state_ctrl,12'b111111111111};
+        wavetable_ctrl_w,
+		  volume_ctrl_w,
+		  note_ctrl_w,
+		  channel_ctrl_w,
+		  velocity_ctrl_w,
+		  note_press_ctrl_w,
+		  note_release_ctrl_w,
+		  adsr_state_ctrl_w,
+		  12'b111111111111};
 
 
 always @(posedge clk32) begin
   if (rst == 1'b1) begin
-    addr_ctrl <= 8'hff;
+    addr_ctrl <= 8'h00;
+	 store_addr_ctrl <= 8'h00;
     we_ctrl <= 1'b0;
 	 ctrl_state <= `CTRL_IDLE;
+	 error_log <= 1'b0;
   end
   else begin
-    we_ctrl <= 1'b0;
+    
     case(ctrl_state)
 	 `CTRL_IDLE :
-	    if (empty == 1'b0 && we_ctrl == 1'b0) 
-		   ctrl_state <= `CTRL_SEARCH_WRITE_ADDR;
-    `CTRL_SEARCH_SET_ADDR :
 	   begin
-		  ctrl_state <= `CTRL_SEARCH_WRITE_ADDR;
-      end		
-    `CTRL_SEARCH_WRITE_ADDR :
+	   if (empty == 1'b0 && note_pressed_fifoout == 1'b1) begin
+		  ctrl_state <= `CTRL_SEARCH_NOTEON;
+		  count_cmd <= count_cmd + 1;
+		end
+		else if (empty == 1'b0 && note_released_fifoout ==1'b1) begin
+		  ctrl_state <= `CTRL_SEARCH_NOTEOFF;
+		  count_cmd <= count_cmd + 1;
+		end
+		else begin
+		  ctrl_state <= `CTRL_IDLE;
+		end
+		we_ctrl <= 1'b0;
+	   if (addr_ctrl == 8'h00) begin
+		  store_addr_ctrl <= 8'b00011111;
+		end
+		else begin
+		  store_addr_ctrl <= addr_ctrl -1;
+		end
+		end
+    `CTRL_SEARCH_NOTEON :
 	   begin
-		  if ((note_pressed_fifoout == 1'b1 && 
-		       adsr_state_ctrl == `BLANK &&
-             note_press_ctrl == 1'b0 ) ||
-				(note_released_fifoout == 1'b1 &&
-				 note_ctrl == note_interface_fifoout &&
-				 channel_ctrl == channel_fifoout)
-				) 
-		  begin
-          we_ctrl <= 1'b1;
+		  if (addr_ctrl == addr_sample && we_sample == 1'b1) begin
+			 ctrl_state <= `CTRL_IDLE; //Need to kill one cycle
+		  end
+		  else if (addr_ctrl == addr_sample) begin
+		    ctrl_state <= `CTRL_SEARCH_NOTEON;
+		  end
+		  else if (adsr_state_ctrl_r == `BLANK) begin
+		    ctrl_state <= `CTRL_FIND_NOTEON;
+		  end
+		  else if (addr_ctrl != store_addr_ctrl) begin
+			 if (addr_ctrl != 8'd31)
+			   addr_ctrl <= addr_ctrl + 1;
+			 else
+			   addr_ctrl <= 8'd0;
+			 ctrl_state<= `CTRL_SEARCH_NOTEON;
+		  end
+		  else begin
+		    ctrl_state <= `CTRL_ERROR;
+		  end
+		end
+    `CTRL_FIND_NOTEON :
+	   begin
+		ctrl_state <= `CTRL_WAIT;
+		we_ctrl <= 1'b1;
+	   note_ctrl_w <= note_interface_fifoout;
+      channel_ctrl_w <= channel_fifoout;
+      velocity_ctrl_w <= velocity_fifoout;
+      volume_ctrl_w <= 18'h00000;
+      wavetable_ctrl_w <= wavetable_ctrl_r;
+      note_press_ctrl_w <= 1'b1;
+      note_release_ctrl_w <= 1'b0;
+      adsr_state_ctrl_w <= `BLANK;
+		error_log <= 1'b0;
+		end
+	 `CTRL_SEARCH_NOTEOFF :
+		begin
+		  if (addr_ctrl == addr_sample && we_sample == 1'b1) begin
+		    ctrl_state <= `CTRL_IDLE; // Need to kill one cycle;
+		  end
+		  else if (addr_ctrl == addr_sample) begin
+		    ctrl_state <= `CTRL_SEARCH_NOTEOFF;
+		  end
+		  else if (note_ctrl_r == note_interface_fifoout &&
+		      channel_ctrl_r == channel_fifoout) begin
+		    ctrl_state <= `CTRL_FIND_NOTEOFF;
+		  end
+		  else if (addr_ctrl != store_addr_ctrl) begin
+		    if (addr_ctrl != 8'd31)
+			   addr_ctrl <= addr_ctrl + 1;
+			 else
+			   addr_ctrl <= 8'd0;
+			 ctrl_state <= `CTRL_SEARCH_NOTEOFF;
+		  end
+		  else begin
+		    ctrl_state <= `CTRL_ERROR;
+		  end
+		end 
+	 `CTRL_FIND_NOTEOFF :
+	   begin
+		ctrl_state <= `CTRL_WAIT;
+		we_ctrl <= 1'b1;
+	   note_ctrl_w <= note_ctrl_r;
+      channel_ctrl_w <= channel_ctrl_r;
+      velocity_ctrl_w <= velocity_fifoout;
+      volume_ctrl_w <= volume_ctrl_r;
+      wavetable_ctrl_w <= wavetable_ctrl_r;
+      note_press_ctrl_w <= 1'b0;
+      note_release_ctrl_w <= 1'b1;
+      adsr_state_ctrl_w <= adsr_state_ctrl_r;
+      error_log <= 1'b0;
+		end
+	 `CTRL_ERROR :
+	   begin
+        if (error_log == 1'b1)		
+		    ctrl_state <= `CTRL_ERROR;
+		  else begin
+		    error_log <= 1'b1;
 			 ctrl_state <= `CTRL_IDLE;
 		  end
-        else begin
-          addr_ctrl <= addr_ctrl + 1;
-			 ctrl_state <= `CTRL_SEARCH_SET_ADDR;
-		  end		  
+		end
+	 `CTRL_WAIT :
+	   begin
+		  we_ctrl <= 1'b0;
+		  ctrl_state <= `CTRL_IDLE;
 		end
 	 endcase 
    
@@ -247,17 +370,19 @@ always @(posedge clk32) begin
 	  if (count >= 11'd666) begin
 	    count <= 10'd0;
 		 addr_sample <= 9'd0;
-       sample_state <= `SAMPLE_NEWADDR;		 
+       sample_state <= `SAMPLE_NEWADDR;
 	  end
 	  else
 	    count <= count + 1;
 	  
 	  case (sample_state)
 	  `SAMPLE_NEWADDR : begin
-	                    if (addr_sample <= 165) //32Mhz ->48Khz /667  
-	                      sample_state <= `SAMPLE_UPNOTE;
+	                    if (addr_sample <= 9'd31) //32Mhz ->48Khz /667  
+	                    begin
+							    sample_state <= `SAMPLE_UPNOTE;
+							  end
 							  //else stay here
-	                    end
+							  end
 	  `SAMPLE_UPNOTE : begin
 	                   sample_state <= `SAMPLE_READ;
 							 //Next cycle wave_advance will get the correct value
@@ -281,5 +406,34 @@ always @(posedge clk32) begin
 	  
   end
 end
+
+assign wavetable_4left = wavetable_sample_r[18:9]+256;
+
+soundgen soundgen0 (
+    .clk(clk32), 
+    .rst(rst), 
+    .wavetable_r(wavetable_sample_r[18:9]), 
+    .wavetable_r_valid(sample_state == `SAMPLE_UPNOTE), 
+    .wavetable_l(wavetable_4left), 
+    .wavetable_l_valid(sample_state == `SAMPLE_READ), 
+    .volume(volume_sample_r), 
+    .tick48k(count==11'd666), 
+    .sound_r(sound_r), 
+    .sound_l(sound_l)
+    );
+
+dac16 inst_dac16_r (
+    .clk(clk32), 
+    .rst(rst), 
+    .data(sound_r[17:2]), 
+    .dac_out(audio_r)
+    );
+
+dac16 inst_dac16_l (
+    .clk(clk32), 
+    .rst(rst), 
+    .data(sound_l[17:2]), 
+    .dac_out(audio_l)
+    );
 
 endmodule

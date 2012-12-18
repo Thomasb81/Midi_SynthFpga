@@ -35,7 +35,7 @@
 
 module fifo (
   clk, rd_en, empty, wr_en, overflow, full, srst, dout, din
-)/* synthesis syn_black_box syn_noprune=1 */;
+);
   input clk;
   input rd_en;
   output empty;
@@ -45,8 +45,6 @@ module fifo (
   input srst;
   output [21 : 0] dout;
   input [21 : 0] din;
-  
-  // synthesis translate_off
   
   wire N0;
   wire N17;
@@ -1420,8 +1418,6 @@ module fifo (
     .I2(\U0/xst_fifo_generator/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.rfwft/RAM_RD_EN_FWFT1_1_21 ),
     .LO(N7)
   );
-
-// synthesis translate_on
 
 endmodule
 
