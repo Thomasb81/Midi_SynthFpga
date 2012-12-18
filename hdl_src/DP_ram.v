@@ -135,8 +135,8 @@ module DP_ram (
     .SIM_COLLISION_CHECK ( "ALL" ),
     .SRVAL_A ( 36'h000000000 ),
     .SRVAL_B ( 36'h000000000 ),
-    .WRITE_MODE_A ( "WRITE_FIRST" ),
-    .WRITE_MODE_B ( "WRITE_FIRST" ))
+    .WRITE_MODE_A ( "READ_FIRST" ),
+    .WRITE_MODE_B ( "READ_FIRST" ))
   \U0/xst_blk_mem_generator/gnativebmg.native_blk_mem_gen/valid.cstr/ramloop[0].ram.r/s3_init.ram/dpram.dp36x36.ram  (
     .CLKA(clka),
     .CLKB(clkb),
@@ -243,8 +243,8 @@ doutb[21], doutb[20], doutb[19], doutb[18], doutb[16], doutb[15], doutb[14], dou
     .SIM_COLLISION_CHECK ( "ALL" ),
     .SRVAL_A ( 36'h000000000 ),
     .SRVAL_B ( 36'h000000000 ),
-    .WRITE_MODE_A ( "WRITE_FIRST" ),
-    .WRITE_MODE_B ( "WRITE_FIRST" ))
+    .WRITE_MODE_A ( "READ_FIRST" ),
+    .WRITE_MODE_B ( "READ_FIRST" ))
   \U0/xst_blk_mem_generator/gnativebmg.native_blk_mem_gen/valid.cstr/ramloop[1].ram.r/s3_init.ram/dpram.dp36x36.ram  (
     .CLKA(clka),
     .CLKB(clkb),
