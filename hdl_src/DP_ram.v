@@ -34,7 +34,7 @@
 `timescale 1 ns/1 ps
 
 module DP_ram (
-  clka, rsta, clkb, rstb, wea, addra, dina, web, addrb, dinb, douta, doutb
+  clka, rsta, clkb, rstb, wea, addra, dina, web, addrb, dinb, douta, doutb, ena, enb
 );
   input clka;
   input rsta;
@@ -46,6 +46,8 @@ module DP_ram (
   input [0 : 0] web;
   input [7 : 0] addrb;
   input [71 : 0] dinb;
+  input ena;
+  input enb;
   output [71 : 0] douta;
   output [71 : 0] doutb;
 
@@ -140,8 +142,8 @@ module DP_ram (
   \U0/xst_blk_mem_generator/gnativebmg.native_blk_mem_gen/valid.cstr/ramloop[0].ram.r/s3_init.ram/dpram.dp36x36.ram  (
     .CLKA(clka),
     .CLKB(clkb),
-    .ENA(N0),
-    .ENB(N0),
+    .ENA(ena),
+    .ENB(enb),
     .SSRA(rsta),
     .SSRB(rstb),
     .WEA(wea[0]),
@@ -248,8 +250,8 @@ doutb[21], doutb[20], doutb[19], doutb[18], doutb[16], doutb[15], doutb[14], dou
   \U0/xst_blk_mem_generator/gnativebmg.native_blk_mem_gen/valid.cstr/ramloop[1].ram.r/s3_init.ram/dpram.dp36x36.ram  (
     .CLKA(clka),
     .CLKB(clkb),
-    .ENA(N0),
-    .ENB(N0),
+    .ENA(ena),
+    .ENB(enb),
     .SSRA(rsta),
     .SSRB(rstb),
     .WEA(wea[0]),

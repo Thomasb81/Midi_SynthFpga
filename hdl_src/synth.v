@@ -16,6 +16,8 @@ module synth2(
   output reg [7:0] data
 );
 
+`define MAX_SND_MEM 8'd31
+
 `define ATTACK 3'd1
 `define DECAY 3'd2
 `define SUSTAIN 3'd3
@@ -41,8 +43,9 @@ reg we_ctrl;
 wire [71:0] dataout_ctrl;
 wire [71:0] datain_ctrl;
 
-reg [8:0] addr_sample;
+reg [7:0] addr_sample;
 reg we_sample;
+reg en_sample;
 wire [71:0] dataout_sample;
 wire [71:0] datain_sample;
 
@@ -91,6 +94,10 @@ wire [17:0] volume_cal;
 reg [1:0] sample_state;
 reg [2:0] ctrl_state;
 
+wire overflow;
+reg [1:0] error;
+
+
 wire [6:0] note_interface_fifoout;
 wire [6:0] velocity_fifoout;
 wire [3:0] channel_fifoout;
@@ -123,7 +130,19 @@ always @(posedge clk32) begin
   end
 end
   
-
+always @(posedge clk32) begin
+  if (rst == 1'b1) begin
+  error <= 2'b00;
+  end
+  else if ( overflow == 1'b1 && loop_cpt != 8'hff )
+    error <= 2'b10;
+  else if ( overflow != 1'b1 && loop_cpt == 8'hff )
+   error <= 2'b01;
+//  else if (overflow == 1'b1 && loop_cpt == 8'hff )
+//   error <= 2'b11;
+//  else
+//   error <= 2'b00;
+end
 
 fifo fifo0 (
   .clk(clk32), // input clk
@@ -146,7 +165,8 @@ fifo fifo0 (
 );
 
 assign state[3] = note_pressed_fifoout;
-assign state[2:0] = ctrl_state;
+assign state[2] = (ctrl_state == `CTRL_ERROR) ? 1'b1 : 1'b0;
+assign state[1:0] = error;
 
 assign {wavetable_ctrl_r,
         volume_ctrl_r,
@@ -188,7 +208,7 @@ always @(posedge clk32) begin
     case(ctrl_state)
 	 `CTRL_IDLE :
 	   begin
-		if (empty == 1'b1 || addr_sample == addr_ctrl) begin
+		if (empty == 1'b1 || (addr_sample == addr_ctrl && en_sample==1'b1)) begin
 		// If there is no data or if we can't write   
 		  ctrl_state <= `CTRL_IDLE;
 		  store_addr_ctrl <= addr_ctrl -1;
@@ -215,7 +235,7 @@ always @(posedge clk32) begin
 		  else begin
 		    if (addr_ctrl == store_addr_ctrl)
 			   loop_cpt <= loop_cpt +1;
-			 if (addr_ctrl != 31)
+			 if (addr_ctrl != `MAX_SND_MEM)
 			   addr_ctrl <= addr_ctrl +1;
 			 else
 			   addr_ctrl <= 8'h00;
@@ -285,7 +305,9 @@ DP_ram DP_ram0 (
   .web(we_sample), // input [0 : 0] web
   .addrb(addr_sample[7:0]), // input [7 : 0] addrb
   .dinb(datain_sample), // input [71 : 0] dinb
-  .doutb(dataout_sample) // output [71 : 0] doutb
+  .doutb(dataout_sample), // output [71 : 0] doutb
+  .ena(1'b1),
+  .enb(en_sample)
 );
 
 freqtable RAMB16_S18 (
@@ -335,7 +357,7 @@ adsr_mngt2 adsr_mngt2_0(
 
 always @(posedge clk32) begin
   if (rst == 1'b1) begin
-    addr_sample <= 9'h000;
+    addr_sample <= 8'h00;
     we_sample <= 1'b0;
     sample_state <= `SAMPLE_NEWADDR;
 	 wavetable_sample_w <= 19'h00000;
@@ -344,6 +366,7 @@ always @(posedge clk32) begin
 	 adsr_state_sample_w <= 1'b0;
 	 volume_sample_w <= 18'h00000;
 	 count <= 11'h000;
+	 en_sample <= 1'b1;
   end
   else begin
      we_sample <= 1'b0;
@@ -351,19 +374,24 @@ always @(posedge clk32) begin
 	  // Count == 667 at 32Mhz to get 48Khz
 	  if (count >= 11'd666) begin
 	    count <= 10'd0;
-		 addr_sample <= 9'd0;
+		 addr_sample <= 8'h00;
        sample_state <= `SAMPLE_NEWADDR;
+		 en_sample <= 1'b1;
 	  end
 	  else
 	    count <= count + 1;
 	  
 	  case (sample_state)
 	  `SAMPLE_NEWADDR : begin
-	                    if (addr_sample <= 9'd31) //32Mhz ->48Khz /667  
+	                    if (addr_sample != `MAX_SND_MEM ) //32Mhz ->48Khz /667  
 	                    begin
 							    sample_state <= `SAMPLE_UPNOTE;
+								 en_sample <= 1'b1;
 							  end
-							  //else stay here
+							  else begin
+							    sample_state <= `SAMPLE_NEWADDR;
+								 en_sample <= 1'b0;
+							  end
 							  end
 	  `SAMPLE_UPNOTE : begin
 	                   sample_state <= `SAMPLE_READ;
