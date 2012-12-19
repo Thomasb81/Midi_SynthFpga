@@ -28,13 +28,12 @@ module synth2(
 `define SAMPLE_WRITE 2'd3
 
 `define CTRL_IDLE 3'd1
-`define CTRL_SEARCH_NOTEON 3'd2
+`define CTRL_WAITDATA 3'd2
 `define CTRL_FIND_NOTEON 3'd3
-`define CTRL_SEARCH_NOTEOFF 3'd4
-`define CTRL_FIND_NOTEOFF 3'd5
+`define CTRL_FIND_NOTEOFF 3'd4
+`define CTRL_WAIT 3'd5
 `define CTRL_ERROR 3'd6
-`define CTRL_WAIT 3'd7
-`define CTRL_NXTADDR 3'd0
+
 
 reg [7:0] addr_ctrl;
 reg [7:0] store_addr_ctrl;
@@ -47,7 +46,7 @@ reg we_sample;
 wire [71:0] dataout_sample;
 wire [71:0] datain_sample;
 
-reg [7:0] error_log;
+reg [7:0] loop_cpt;
 reg [10:0] count;
 reg [15:0] count_cmd = 16'h0000;
 
@@ -118,7 +117,7 @@ always @(posedge clk32) begin
 	 else if (velocity == 7'h01)
 	   data <= count_cmd[7:0];
 	 else if (velocity == 7'h02)
-	   data <= error_log;
+	   data <= loop_cpt;
 	 else
 	   data <= 8'h55;
   end
@@ -176,7 +175,7 @@ always @(posedge clk32) begin
 	 store_addr_ctrl <= 8'h00;
     we_ctrl <= 1'b0;
 	 ctrl_state <= `CTRL_IDLE;
-	 error_log <= 8'h00;
+	 loop_cpt <= 8'h00;
 	 channel_ctrl_w <= 4'h0;
 	 note_ctrl_w <= 7'h00;
 	 velocity_ctrl_w <= 7'h00;
@@ -189,45 +188,41 @@ always @(posedge clk32) begin
     case(ctrl_state)
 	 `CTRL_IDLE :
 	   begin
-	   if (empty == 1'b0 && note_pressed_fifoout == 1'b1) begin
-		  ctrl_state <= `CTRL_SEARCH_NOTEON;
-		end
-		else if (empty == 1'b0 && note_released_fifoout ==1'b1) begin
-		  ctrl_state <= `CTRL_SEARCH_NOTEOFF;
+		if (empty == 1'b1 || addr_sample == addr_ctrl) begin
+		// If there is no data or if we can't write   
+		  ctrl_state <= `CTRL_IDLE;
+		  store_addr_ctrl <= addr_ctrl -1;
 		end
 		else begin
-		  ctrl_state <= `CTRL_IDLE;
-		end
-		
-		if (addr_ctrl == 8'h00)
-		  store_addr_ctrl <= 8'b00011111;
-      else begin
-		  store_addr_ctrl <= addr_ctrl-1;
-
-		end
-	 end	
-    `CTRL_SEARCH_NOTEON :
-	   begin
-		  if (addr_ctrl == addr_sample && we_sample == 1'b1) begin
-			 ctrl_state <= `CTRL_IDLE; //Need to kill one cycle
-		  end
-		  else if (addr_ctrl == addr_sample) begin
-		    ctrl_state <= `CTRL_SEARCH_NOTEON;
-		  end
-		  else if (note_ctrl_r == note_interface_fifoout &&
-		           channel_ctrl_r == channel_fifoout) begin
+        // empty == 1'b0
+		  if ((note_pressed_fifoout == 1'b1) && 
+		      ( 
+			    (note_ctrl_r == note_interface_fifoout && 
+			     channel_ctrl_r == channel_fifoout) ||
+				  (adsr_state_ctrl_r == `BLANK && loop_cpt > 0 && note_press_ctrl_r == 1'b0)
+				 )
+				) begin
 			 ctrl_state <= `CTRL_FIND_NOTEON;
+        end
+		  else if ((note_released_fifoout == 1'b1) &&
+		            (note_ctrl_r == note_interface_fifoout &&
+						 channel_ctrl_r == channel_fifoout)
+		           ) begin
+			 ctrl_state <= `CTRL_FIND_NOTEOFF;	
 		  end
-		  else if (adsr_state_ctrl_r == `BLANK && error_log >=1) begin
-		    ctrl_state <= `CTRL_FIND_NOTEON;
-		  end
-		  else if (addr_ctrl != store_addr_ctrl) begin
-			 ctrl_state<= `CTRL_NXTADDR;
-		  end
-		  else begin
+		  else if (loop_cpt == 8'hff)
 		    ctrl_state <= `CTRL_ERROR;
+		  else begin
+		    if (addr_ctrl == store_addr_ctrl)
+			   loop_cpt <= loop_cpt +1;
+			 if (addr_ctrl != 31)
+			   addr_ctrl <= addr_ctrl +1;
+			 else
+			   addr_ctrl <= 8'h00;
+			 ctrl_state <= `CTRL_WAITDATA;
 		  end
 		end
+	   end	
     `CTRL_FIND_NOTEON :
 	   begin
 		ctrl_state <= `CTRL_WAIT;
@@ -240,28 +235,9 @@ always @(posedge clk32) begin
       note_press_ctrl_w <= 1'b1;
       note_release_ctrl_w <= 1'b0;
       adsr_state_ctrl_w <= `BLANK;
-		error_log <= 8'h00;
+		loop_cpt <= 8'h00;
 		count_cmd <= count_cmd + 1;
 		end
-	 `CTRL_SEARCH_NOTEOFF :
-		begin
-		  if (addr_ctrl == addr_sample && we_sample == 1'b1) begin
-		    ctrl_state <= `CTRL_IDLE; // Need to kill one cycle;
-		  end
-		  else if (addr_ctrl == addr_sample) begin
-		    ctrl_state <= `CTRL_SEARCH_NOTEOFF;
-		  end
-		  else if (note_ctrl_r == note_interface_fifoout &&
-		      channel_ctrl_r == channel_fifoout) begin
-		    ctrl_state <= `CTRL_FIND_NOTEOFF;
-		  end
-		  else if (addr_ctrl != store_addr_ctrl) begin
-          ctrl_state <= `CTRL_NXTADDR;
-		  end
-		  else begin
-		    ctrl_state <= `CTRL_ERROR;
-		  end
-		end 
 	 `CTRL_FIND_NOTEOFF :
 	   begin
 		ctrl_state <= `CTRL_WAIT;
@@ -274,39 +250,22 @@ always @(posedge clk32) begin
       note_press_ctrl_w <= 1'b0;
       note_release_ctrl_w <= 1'b1;
       adsr_state_ctrl_w <= adsr_state_ctrl_r;
-      error_log <= 8'h00;
+      loop_cpt <= 8'h00;
 		count_cmd <= count_cmd + 1;
 		end
 	 `CTRL_ERROR :
 	   begin
-        if (error_log == 8'hff)		
 		    ctrl_state <= `CTRL_ERROR;
-		  else begin
-		    error_log <= error_log +1;
-			 ctrl_state <= `CTRL_IDLE;
-/*			 if (addr_sample != 8'd32)
-			   addr_ctrl <= addr_sample + 1;
-			 else
-			   addr_ctrl <= 8'h00;*/
-			 
-		  end
 		end
 	 `CTRL_WAIT :
 	   begin
 		  we_ctrl <= 1'b0;
 		  ctrl_state <= `CTRL_IDLE;
 		end
-	 `CTRL_NXTADDR :
+	 `CTRL_WAITDATA :
 	 begin
-	   if (addr_ctrl != 8'd31)
-		  addr_ctrl <= addr_ctrl + 1;
-		else
-		  addr_ctrl <= 8'd0;
-		
-		if (note_pressed_fifoout == 1'b1)
-		  ctrl_state <= `CTRL_SEARCH_NOTEON;
-		else if (note_released_fifoout ==1'b1)
-		  ctrl_state <= `CTRL_SEARCH_NOTEOFF;
+	   ctrl_state <= `CTRL_IDLE;
+
 	 end
 		
 	 endcase 
