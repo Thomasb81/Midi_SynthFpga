@@ -114,6 +114,20 @@ wire [11:0] dummy_12bits_sample;
 wire [17:0] sound_r;
 wire [17:0] sound_l;
 
+// synthesis translate_off
+
+// for debugging
+reg [6:0] note_sample_debug[0:31];
+reg [3:0] channel_sample_debug[0:31];
+reg [6:0] velocity_sample_debug[0:31];
+reg [17:0] volume_sample_debug[0:31];
+reg [18:0] wavetable_sample_debug[0:31];
+reg note_pressed_sample_debug[0:31];
+reg note_released_sample_debug[0:31];
+reg [2:0] adsr_state_sample_debug[0:31];
+
+// synthesis translate_on
+
 always @(posedge clk32) begin
   if (rst == 1'b1) begin
   data <= 8'h00;
@@ -208,7 +222,7 @@ always @(posedge clk32) begin
     case(ctrl_state)
 	 `CTRL_IDLE :
 	   begin
-		if (empty == 1'b1 || (addr_sample == addr_ctrl && en_sample==1'b1)) begin
+		if (empty == 1'b1 || (addr_sample == addr_ctrl && en_sample ==1'b1)) begin
 		// If there is no data or if we can't write   
 		  ctrl_state <= `CTRL_IDLE;
 		  store_addr_ctrl <= addr_ctrl -1;
@@ -354,52 +368,53 @@ adsr_mngt2 adsr_mngt2_0(
 .o_volume(volume_cal)
 );
 
+always @(posedge clk32) begin
+  if (rst == 1'b1) begin
+    count <= 11'h000;
+  end
+  else begin
+    if (count <= 11'd666)
+	   count <= count +1;
+	 else
+	   count <= 11'h000;
+  end
+end
+
 
 always @(posedge clk32) begin
   if (rst == 1'b1) begin
     addr_sample <= 8'h00;
     we_sample <= 1'b0;
+	 en_sample <= 1'b1;
     sample_state <= `SAMPLE_NEWADDR;
 	 wavetable_sample_w <= 19'h00000;
 	 note_released_sample_w <= 1'b0;
 	 note_pressed_sample_w <= 1'b0;
 	 adsr_state_sample_w <= 1'b0;
 	 volume_sample_w <= 18'h00000;
-	 count <= 11'h000;
-	 en_sample <= 1'b1;
   end
   else begin
-     we_sample <= 1'b0;
-	  
-	  // Count == 667 at 32Mhz to get 48Khz
-	  if (count >= 11'd666) begin
-	    count <= 10'd0;
-		 addr_sample <= 8'h00;
-       sample_state <= `SAMPLE_NEWADDR;
-		 en_sample <= 1'b1;
-	  end
-	  else
-	    count <= count + 1;
+     //we_sample <= 1'b0;
+	  //en_sample <= 1'b0;
 	  
 	  case (sample_state)
 	  `SAMPLE_NEWADDR : begin
-	                    if (addr_sample != `MAX_SND_MEM ) //32Mhz ->48Khz /667  
-	                    begin
-							    sample_state <= `SAMPLE_UPNOTE;
-								 en_sample <= 1'b1;
-							  end
-							  else begin
-							    sample_state <= `SAMPLE_NEWADDR;
-								 en_sample <= 1'b0;
-							  end
-							  end
+       en_sample <= 1'b1;
+		 sample_state<= `SAMPLE_UPNOTE;
+
+							 end
 	  `SAMPLE_UPNOTE : begin
+	                   en_sample <= 1'b1;
 	                   sample_state <= `SAMPLE_READ;
 							 //Next cycle wave_advance will get the correct value
 	                   end
 	  `SAMPLE_READ : begin
+	                 en_sample <= 1'b1;
 	                 sample_state <= `SAMPLE_WRITE;
-						  we_sample <= 1'b1;
+						  if (addr_sample <= `MAX_SND_MEM)
+						    we_sample <= 1'b1;
+						  else
+						    we_sample <= 1'b0;
 						  wavetable_sample_w <= wavetable_sample_r + wave_advance;
                     adsr_state_sample_w <= adsr_state;
                     note_pressed_sample_w <= note_pressed_cal;
@@ -407,10 +422,26 @@ always @(posedge clk32) begin
                     volume_sample_w <= volume_cal;
 	                 end
 	  `SAMPLE_WRITE : begin
-	                  sample_state <= `SAMPLE_NEWADDR;
+	                  
 							we_sample <=1'b0;
-							addr_sample <= addr_sample +1;
+							if (count < 4* `MAX_SND_MEM) begin
+							  if (addr_sample < `MAX_SND_MEM) begin
+		                   addr_sample <= addr_sample + 1;
+		                 end
+		                 else begin
+		                   addr_sample <= 8'h00;
+		                 end
+							  en_sample <= 1'b1;
+							  sample_state <= `SAMPLE_NEWADDR;
+							end
+							else if (count == 11'd666) begin
+							  sample_state <= `SAMPLE_NEWADDR;
+							  en_sample <= 1'b1;
 	                  end
+							else
+							  sample_state <= `SAMPLE_WRITE;
+							  en_sample <= 1'b0;
+							end
 	  endcase
 	  
 	  
@@ -445,5 +476,23 @@ dac16 inst_dac16_l (
     .data(sound_l[17:2]), 
     .dac_out(audio_l)
     );
+
+// synthesis translate_off
+
+// for debugging
+
+always @(posedge clk32) begin
+  if ((sample_state == `SAMPLE_WRITE) && (addr_sample <= `MAX_SND_MEM)) begin
+    note_sample_debug[addr_sample] <= note_sample_r;
+    channel_sample_debug[addr_sample] <= channel_sample_r;
+    velocity_sample_debug[addr_sample] <= velocity_sample_r;
+    volume_sample_debug[addr_sample] <= volume_sample_w;
+    wavetable_sample_debug[addr_sample] <= wavetable_sample_w;
+    note_pressed_sample_debug[addr_sample] <= note_pressed_sample_w;
+    note_released_sample_debug[addr_sample] <= note_released_sample_w;
+    adsr_state_sample_debug[addr_sample] <= adsr_state_sample_w;
+  end
+end
+// synthesis translate_on
 
 endmodule
