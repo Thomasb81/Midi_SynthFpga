@@ -265,57 +265,50 @@ always @(posedge clk32) begin
 	 volume_sample_w <= 18'h00000;
   end
   else begin
-     //we_sample <= 1'b0;
-	  //en_sample <= 1'b0;
-	  
-	  case (sample_state)
-	  `SAMPLE_NEWADDR : begin
+    case (sample_state)
+     `SAMPLE_NEWADDR : begin
        en_sample <= 1'b1;
-		 sample_state<= `SAMPLE_UPNOTE;
-
-							 end
-	  `SAMPLE_UPNOTE : begin
-	                   en_sample <= 1'b1;
-	                   sample_state <= `SAMPLE_READ;
-							 //Next cycle wave_advance will get the correct value
-	                   end
-	  `SAMPLE_READ : begin
-	                 en_sample <= 1'b1;
-	                 sample_state <= `SAMPLE_WRITE;
-						  if (addr_sample <= `MAX_SND_MEM)
-						    we_sample <= 1'b1;
-						  else
-						    we_sample <= 1'b0;
-						  wavetable_sample_w <= wavetable_sample_r + wave_advance;
-                    adsr_state_sample_w <= adsr_state;
-                    note_pressed_sample_w <= note_pressed_cal;
-                    note_released_sample_w <= note_released_cal;
-                    volume_sample_w <= volume_cal;
-	                 end
-	  `SAMPLE_WRITE : begin
-	                  
-							we_sample <=1'b0;
-							if (count < 4* `MAX_SND_MEM) begin
-							  if (addr_sample < `MAX_SND_MEM) begin
-		                   addr_sample <= addr_sample + 1;
-		                 end
-		                 else begin
-		                   addr_sample <= 8'h00;
-		                 end
-							  en_sample <= 1'b1;
-							  sample_state <= `SAMPLE_NEWADDR;
-							end
-							else if (count == 11'd666) begin
-							  sample_state <= `SAMPLE_NEWADDR;
-							  en_sample <= 1'b1;
-	                  end
-							else
-							  sample_state <= `SAMPLE_WRITE;
-							  en_sample <= 1'b0;
-							end
-	  endcase
-	  
-	  
+       sample_state<= `SAMPLE_UPNOTE;
+     end
+     `SAMPLE_UPNOTE : begin
+       en_sample <= 1'b1;
+       sample_state <= `SAMPLE_READ;
+       //Next cycle wave_advance will get the correct value
+     end
+     `SAMPLE_READ : begin
+       en_sample <= 1'b1;
+       sample_state <= `SAMPLE_WRITE;
+       if (addr_sample <= `MAX_SND_MEM)
+         we_sample <= 1'b1;
+       else
+         we_sample <= 1'b0;
+       wavetable_sample_w <= wavetable_sample_r + wave_advance;
+       adsr_state_sample_w <= adsr_state;
+       note_pressed_sample_w <= note_pressed_cal;
+       note_released_sample_w <= note_released_cal;
+       volume_sample_w <= volume_cal;
+    end
+    `SAMPLE_WRITE : begin
+      we_sample <=1'b0;
+      if (count < 4* `MAX_SND_MEM) begin
+        if (addr_sample < `MAX_SND_MEM) begin
+          addr_sample <= addr_sample + 1;
+        end
+      else begin
+        addr_sample <= 8'h00;
+      end
+      en_sample <= 1'b1;
+      sample_state <= `SAMPLE_NEWADDR;
+      end
+      else if (count == 11'd666) begin
+        sample_state <= `SAMPLE_NEWADDR;
+        en_sample <= 1'b1;
+      end
+      else
+        sample_state <= `SAMPLE_WRITE;
+        en_sample <= 1'b0;
+      end
+  endcase
   end
 end
 
