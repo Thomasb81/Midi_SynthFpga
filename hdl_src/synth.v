@@ -5,21 +5,12 @@ module synth2(
   input note_pressed,
   input note_released,
   input note_keypress,
-  input note_channelpress,
-  input [6:0] note_interface,
+  input [6:0] note,
   input [6:0] velocity,
   input [3:0] channel,
+  input [7:0] addr,
   output audio_r, 
-  output audio_l,
-  output[3:0] state,
-  input read_back,
-  output reg [7:0] data,
-  // controler control
-  input c_valid,
-  input [6:0] c_cmd,
-  input [7:0] c_byte0,
-  input [7:0] c_byte1,
-  input [7:0] c_byte2 
+  output audio_l
 );
 
 `define MAX_SND_MEM 8'd255
@@ -52,6 +43,7 @@ reg [10:0] count;
 wire [6:0] note_ctrl_r;
 wire [3:0] channel_ctrl_r;
 wire [6:0] velocity_ctrl_r;
+wire [6:0] sustain_ctrl_r;
 wire [17:0] volume_ctrl_r;
 wire [18:0] wavetable_ctrl_r;
 wire note_press_ctrl_r;
@@ -61,6 +53,7 @@ wire [2:0] adsr_state_ctrl_r;
 reg [6:0] note_ctrl_w;
 reg [3:0] channel_ctrl_w;
 reg [6:0] velocity_ctrl_w;
+reg [6:0] sustain_ctrl_w;
 reg [17:0] volume_ctrl_w;
 reg [18:0] wavetable_ctrl_w;
 reg note_press_ctrl_w;
@@ -70,12 +63,14 @@ reg [2:0] adsr_state_ctrl_w;
 wire [6:0] note_sample_r;
 wire [3:0] channel_sample_r;
 wire [6:0] velocity_sample_r;
+wire [6:0] sustain_sample_r;
 wire [17:0] volume_sample_r;
 wire [18:0] wavetable_sample_r;
 wire note_pressed_sample_r;
 wire note_released_sample_r;
 wire [2:0] adsr_state_sample_r;
 reg [17:0] volume_sample_w;
+reg [6:0] sustain_sample_w;
 reg [18:0] wavetable_sample_w;
 reg note_pressed_sample_w;
 reg note_released_sample_w;
@@ -91,7 +86,7 @@ reg [1:0] sample_state;
 reg [2:0] ctrl_state;
 
 
-wire [6:0] note_interface_fifoout;
+wire [6:0] note_fifoout;
 wire [6:0] velocity_fifoout;
 wire [3:0] channel_fifoout;
 wire note_pressed_fifoout;
@@ -101,8 +96,8 @@ wire note_channelpress_fifoout;
 
 wire [9:0] wavetable_4left;
 
-wire [11:0] dummy_12bits_ctrl;
-wire [11:0] dummy_12bits_sample;
+wire [4:0] dummy_5bits_ctrl;
+wire [4:0] dummy_5bits_sample;
 
 wire [17:0] sound_r;
 wire [17:0] sound_l;
@@ -114,51 +109,56 @@ wire [17:0] sound_l;
 // synthesis translate_on
 
 
-assign {wavetable_ctrl_r,
-        volume_ctrl_r,
-		  note_ctrl_r,
-		  channel_ctrl_r,
-		  velocity_ctrl_r,
-        note_press_ctrl_r,
-		  note_release_ctrl_r,
-		  adsr_state_ctrl_r,
-		  dummy_12bits_ctrl} = dataout_ctrl;
+assign {
+wavetable_ctrl_r,
+volume_ctrl_r,
+note_ctrl_r,
+channel_ctrl_r,
+velocity_ctrl_r,
+note_press_ctrl_r,
+note_release_ctrl_r,
+adsr_state_ctrl_r,
+sustain_ctrl_r,
+dummy_5bits_ctrl
+} = dataout_ctrl;
+
 assign datain_ctrl = {
-        wavetable_ctrl_w,
-		  volume_ctrl_w,
-		  note_ctrl_w,
-		  channel_ctrl_w,
-		  velocity_ctrl_w,
-		  note_press_ctrl_w,
-		  note_release_ctrl_w,
-		  adsr_state_ctrl_w,
-		  12'b111111111111};
+wavetable_ctrl_w,
+volume_ctrl_w,
+note_ctrl_w,
+channel_ctrl_w,
+velocity_ctrl_w,
+note_press_ctrl_w,
+note_release_ctrl_w,
+adsr_state_ctrl_w,
+sustain_ctrl_w,
+5'b11111};
 
 always @(posedge clk32) begin
  if (rst == 1'b1) begin
-	 channel_ctrl_w <= 4'h0;
-	 note_ctrl_w <= 7'h00;
-	 velocity_ctrl_w <= 7'h00;
-	 note_press_ctrl_w <= 1'b0;
-	 note_release_ctrl_w <= 1'b0;
-	 adsr_state_ctrl_w <= `BLANK;
-         addr_ctrl <= 8'h00;
+   channel_ctrl_w <= 4'h0;
+   note_ctrl_w <= 7'h00;
+   velocity_ctrl_w <= 7'h00;
+   note_press_ctrl_w <= 1'b0;
+   note_release_ctrl_w <= 1'b0;
+   adsr_state_ctrl_w <= `BLANK;
+   addr_ctrl <= 8'h00;
  end
  else begin
    if (note_pressed == 1'b1 || note_released == 1'b1) begin
-     addr_ctrl <= c_byte0;
+     addr_ctrl <= addr;
      we_ctrl <= 1'b1;
      note_press_ctrl_w <= note_pressed;
      note_release_ctrl_w <= note_released;
      velocity_ctrl_w <= velocity;
      if (note_pressed == 1'b1) begin
-       note_ctrl_w <= note_interface;
+       note_ctrl_w <= note;
        channel_ctrl_w <= channel;
        volume_ctrl_w <= 18'h00000;
        adsr_state_ctrl_w <= `BLANK; 
      end
      else begin // note_released
-       note_ctrl_w <= note_interface;
+       note_ctrl_w <= note;
        channel_ctrl_w <= channel;
        volume_ctrl_w <= volume_ctrl_r;
        adsr_state_ctrl_w <= adsr_state_ctrl_r;
@@ -198,28 +198,35 @@ freqtable RAMB16_S18 (
 
 // sample interface
 
-assign {wavetable_sample_r,
-        volume_sample_r,
-		  note_sample_r,
-		  channel_sample_r,
-		  velocity_sample_r,
-        note_pressed_sample_r,
-		  note_released_sample_r,
-		  adsr_state_sample_r,dummy_12bits_sample} = dataout_sample;
+assign {
+wavetable_sample_r,
+volume_sample_r,
+note_sample_r,
+channel_sample_r,
+velocity_sample_r,
+note_pressed_sample_r,
+note_released_sample_r,
+adsr_state_sample_r,
+sustain_sample_r,
+dummy_5bits_sample
+} = dataout_sample;
 
 assign datain_sample = {
-        wavetable_sample_w,
-		  volume_sample_w,
-		  note_sample_r,
-		  channel_sample_r,
-		  velocity_sample_r,
-		  note_pressed_sample_w,
-		  note_released_sample_w,
-		  adsr_state_sample_w,dummy_12bits_sample};
+wavetable_sample_w,
+volume_sample_w,
+note_sample_r,
+channel_sample_r,
+velocity_sample_r,
+note_pressed_sample_w,
+note_released_sample_w,
+adsr_state_sample_w,
+sustain_sample_r,
+dummy_5bits_sample};
 
 adsr_mngt2 adsr_mngt2_0(
-.sustain_value(7'b1000000),
-.attack_rate(velocity_sample_r),
+.velocity_value(velocity_sample_r),
+.sustain_value(sustain_sample_r),
+.attack_rate(7'b0100000),
 .decay_rate(7'b0100000),
 .release_rate(7'b0001000),
 .i_state(adsr_state_sample_r),

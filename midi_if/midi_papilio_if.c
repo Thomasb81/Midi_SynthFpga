@@ -19,13 +19,10 @@
 
 serialib ttyusb1;
 char buffer[7];
-#define SYNTH_C_CMD 0
-#define SYNTH_C_BYTE0 1
-#define SYNTH_C_BYTE1 2
-#define SYNTH_C_BYTE2 3
-#define SYNTH_MIDI0 4
-#define SYNTH_MIDI1 5
-#define SYNTH_MIDI2 6
+#define SYNTH_MIDI0 0
+#define SYNTH_MIDI1 1
+#define SYNTH_MIDI2 2
+#define SYNTH_MIDI3 3
 
 
 stats db;
@@ -33,12 +30,14 @@ tune db_tune;
 
 
 void printf_m(char * buf) {
-  fprintf(stdout,"## begin ##\n");
-  for (uint8_t i=0; i<7; i++) { 
-    fprintf(stdout,"ser.write(struct.pack('B',0x%02x))\n",(uint8_t) (0xff & buf[i]));
-  }
-  fprintf(stdout,"## end ##\n");
+//  fprintf(stdout,"## begin ##\n");
+//  for (uint8_t i=0; i<7; i++) { 
+//    fprintf(stdout,"ser.write(struct.pack('B',0x%02x))\n",(uint8_t) (0xff & buf[i]));
+//  }
+//  fprintf(stdout,"## end ##\n");
 }
+
+
 
 
 snd_seq_t *open_seq();
@@ -88,16 +87,13 @@ void midi_action(snd_seq_t *seq_handle) {
                 ev->data.control.channel, ev->data.note.channel,
                 ev->data.note.note, ev->data.note.velocity, 
                 ev->data.note.off_velocity, ev->data.note.duration);
-        buffer[SYNTH_C_CMD] = 0x0;
-        buffer[SYNTH_C_BYTE0] = db_tune.add_tune(ev->data.control.channel,ev->data.note.note);
-        buffer[SYNTH_C_BYTE1] = 0xff;
-        buffer[SYNTH_C_BYTE2] = 0xff;
+        buffer[SYNTH_MIDI3] = db_tune.add_tune(ev->data.control.channel,ev->data.note.note);
         buffer[SYNTH_MIDI0] = (uint8_t) ((9 << 4) | (ev->data.note.channel & 0xf));
         buffer[SYNTH_MIDI1] = (uint8_t) ev->data.note.note & 0x7f;
         buffer[SYNTH_MIDI2] = (uint8_t) ev->data.note.velocity & 0x7f;
         if ((ev->data.note.channel & 0xf) != 9) {
           // For the momment filter channel 10 reserved for percussion
-          ttyusb1.Write(&buffer,7);
+          ttyusb1.Write(&buffer,4);
           printf_m(buffer);
           db.note_on( ev->data.control.channel,ev->data.note.note);
 
@@ -108,16 +104,13 @@ void midi_action(snd_seq_t *seq_handle) {
                 ev->data.control.channel, ev->data.note.channel,
                 ev->data.note.note, ev->data.note.velocity, 
                 ev->data.note.off_velocity, ev->data.note.duration);
-        buffer[SYNTH_C_CMD] = 0x0;
-        buffer[SYNTH_C_BYTE0] = db_tune.remove_tune(ev->data.control.channel,ev->data.note.note);
-        buffer[SYNTH_C_BYTE1] = 0xff;
-        buffer[SYNTH_C_BYTE2] = 0xff;
+        buffer[SYNTH_MIDI3] = db_tune.remove_tune(ev->data.control.channel,ev->data.note.note);
         buffer[SYNTH_MIDI0] = (uint8_t) ((8 << 4) | (ev->data.note.channel & 0xf));
         buffer[SYNTH_MIDI1] = (uint8_t) ev->data.note.note & 0x7f;
         buffer[SYNTH_MIDI2] = (uint8_t) ev->data.note.velocity & 0x7f;
         if ((ev->data.note.channel & 0xf) != 9) {
           // For the momment filter channel 10 reserved for percussion
-          ttyusb1.Write(&buffer,7);
+          ttyusb1.Write(&buffer,4);
           printf_m(buffer);
           db.note_off( ev->data.control.channel,ev->data.note.note);
         }

@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 module adsr_mngt2(
+    input [6:0] velocity_value,
     input [6:0] sustain_value,
     input [6:0] attack_rate,
     input [6:0] decay_rate,
@@ -26,8 +27,10 @@ module adsr_mngt2(
 `define VOLUME_MAX 18'h1FFFF
 
 wire [17:0] sustain_value_internal;
+wire [17:0] velocity_value_internal;
 
 assign sustain_value_internal = {1'b0,sustain_value,10'b0000000000};
+assign velocity_value_internal = {1'b0,velocity_value,10'b0000000000};
 
 /*
 assign o_note_pressed = (i_state == `ATTACK && i_note_pressed == 1'b1) ? 1'b0 : i_note_pressed;
@@ -39,7 +42,7 @@ assign o_note_released = 1'b0;
 
 assign o_state = (i_state == `BLANK && i_note_pressed == 1'b1) ? `ATTACK :
                  (i_state == `ATTACK && i_note_released == 1'b1) ? `RELEASE :
-					  (i_state == `ATTACK && i_volume >= `VOLUME_MAX) ? `DECAY :
+		 (i_state == `ATTACK && i_volume >= velocity_value_internal) ? `DECAY :
                  (i_state == `DECAY && i_note_released == 1'b1) ? `RELEASE:
                  (i_state == `DECAY && i_note_pressed == 1'b1) ? `ATTACK :
                  (i_state == `DECAY && i_volume < sustain_value_internal) ? `SUSTAIN :
@@ -49,12 +52,12 @@ assign o_state = (i_state == `BLANK && i_note_pressed == 1'b1) ? `ATTACK :
                  (i_state == `RELEASE && i_volume[17] == 1'b1) ? `BLANK :
                  i_state;
 
-assign o_volume = (i_state == `ATTACK && ((i_volume+attack_rate) > `VOLUME_MAX) ) ?`VOLUME_MAX :
+assign o_volume = (i_state == `ATTACK && ((i_volume+attack_rate) > velocity_value_internal)) ? velocity_value_internal :
                   (i_state == `ATTACK )? i_volume + attack_rate :
-                (i_state == `DECAY ) ? i_volume - decay_rate :
-                (i_state == `SUSTAIN ) ? sustain_value_internal :
-                (i_state == `RELEASE ) ? i_volume - release_rate : 
-                (i_state == `BLANK) ? `VOLUME_RESET : 
-                i_volume;
+                  (i_state == `DECAY ) ? i_volume - decay_rate :
+                  (i_state == `SUSTAIN ) ? sustain_value_internal :
+                  (i_state == `RELEASE ) ? i_volume - release_rate : 
+                  (i_state == `BLANK) ? `VOLUME_RESET : 
+                  i_volume;
 
 endmodule

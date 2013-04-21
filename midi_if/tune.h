@@ -21,14 +21,14 @@ class key {
     key(uint8_t channel, uint8_t note): _channel(channel), _note(note){};
     ~key(){};
     
-    bool operator== (const key& a) {
+    inline bool operator== (const key& a) {
       return (_channel == a._channel) && (_note == a._note);
     };
-/*
-    bool operator != (const key& a, const key& b) {
-      return (a._channel != b._channel) || (a._note != b.note);
+
+    inline bool operator != (const key& a) {
+      return (_channel != a._channel) || (_note != a._note);
     };
-*/
+
 };
 
 class tune {
@@ -45,6 +45,7 @@ class tune {
 
     uint8_t add_tune(uint8_t channel, uint8_t note);
     uint8_t remove_tune(uint8_t channel, uint8_t note);
+    uint8_t find_tune (uint8_t channel, uint8_t note);
    
 };
 

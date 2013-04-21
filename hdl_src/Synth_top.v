@@ -24,16 +24,11 @@ wire [6:0] velocity;
 wire note_pressed;
 wire note_released;
 wire note_keypress;
-wire note_channelpress;
 wire [3:0] channel;
 wire read;
 wire read_resync;
 wire [7:0] data_w, data_w_resync;
-
-wire c_valid;
-wire [6:0] c_cmd;
-wire [7:0] c_byte0, c_byte1, c_byte2;
-
+wire [7:0] addr;
 
 wire rst;
 wire rst_cmd;
@@ -49,28 +44,20 @@ DCM0 clk_builder0 (
 synth2 synth0 (
     .clk32(clk32), 
     .rst(rst),
-    
     .note_pressed(note_pressed), 
     .note_released(note_released),
     .note_keypress(note_keypress),
-    .note_channelpress(note_channelpress),	 
-    .note_interface(note), 
+    .note(note), 
     .velocity(velocity),
     .channel(channel),
-	 
+    .addr(addr),	 
     .audio_r(audio_r),
-    .audio_l(audio_l),
-    .state({led4,led3,led2,led1}),
-    .read_back(read),
-    .data(data_w),
-    // controler control
-    .c_valid(c_valid),
-    .c_cmd(c_cmd),
-    .c_byte0(c_byte0),
-    .c_byte1(c_byte1),
-    .c_byte2(c_byte2) 
+    .audio_l(audio_l)
 
 );
+
+assign read = 1'b0;
+assign data_w = 8'h00;
 
 resync_data resync_valid0 (
     .rst(rst),
@@ -104,10 +91,10 @@ uart_ss uart_ss0 (
     .di(data_w_resync)
 );
 
-//assign led1 = data[0] | data[1];
-//assign led2 = data[2] | data[3];
-//assign led3 = data[4] | data[5];
-//assign led4 = data[6] | data[7];
+assign led1 = data[0] | data[1];
+assign led2 = data[2] | data[3];
+assign led3 = data[4] | data[5];
+assign led4 = data[6] | data[7];
 
 
 
@@ -120,18 +107,11 @@ midi_ctrl midi_ctrl (
     .note_presse(note_pressed), 
     .note_release(note_released),
     .note_keypress(note_keypress),
-    .note_channelpress(note_channelpress),
-    .channel(channel),	 
     .note(note), 
     .velocity(velocity),
+    .channel(channel),	 
     .rst_cmd(rst_cmd),
-    .read(read),
-    // controler control
-    .c_valid(c_valid),
-    .c_cmd(c_cmd),
-    .c_byte0(c_byte0),
-    .c_byte1(c_byte1),
-    .c_byte2(c_byte2) 
+    .addr(addr)
 );
 
 //assign led4 = (velocity == 7'b0000000)? 1 : 0;
