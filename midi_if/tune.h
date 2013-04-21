@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define MAX_TUNE 256
+#define MAX_TUNE 128
 
 using namespace std;
 

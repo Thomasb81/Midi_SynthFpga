@@ -13,7 +13,7 @@ module synth2(
   output audio_l
 );
 
-`define MAX_SND_MEM 8'd255
+`define MAX_SND_MEM 8'd128
 
 `define ATTACK 3'd1
 `define DECAY 3'd2
@@ -34,7 +34,6 @@ wire [71:0] datain_ctrl;
 
 reg [7:0] addr_sample;
 reg we_sample;
-reg en_sample;
 wire [71:0] dataout_sample;
 wire [71:0] datain_sample;
 
@@ -84,15 +83,6 @@ wire [17:0] volume_cal;
 
 reg [1:0] sample_state;
 reg [2:0] ctrl_state;
-
-
-wire [6:0] note_fifoout;
-wire [6:0] velocity_fifoout;
-wire [3:0] channel_fifoout;
-wire note_pressed_fifoout;
-wire note_released_fifoout;
-wire note_keypress_fifoout;
-wire note_channelpress_fifoout;
 
 wire [9:0] wavetable_4left;
 
@@ -185,7 +175,7 @@ DP_ram DP_ram0 (
   .dinb(datain_sample), // input [71 : 0] dinb
   .doutb(dataout_sample), // output [71 : 0] doutb
   .ena(1'b1),
-  .enb(en_sample)
+  .enb(1'b1)
 );
 
 freqtable RAMB16_S18 (
@@ -256,7 +246,6 @@ always @(posedge clk32) begin
   if (rst == 1'b1) begin
     addr_sample <= 8'h00;
     we_sample <= 1'b0;
-    en_sample <= 1'b1;
     sample_state <= `SAMPLE_NEWADDR;
     wavetable_sample_w <= 19'h00000;
     note_released_sample_w <= 1'b0;
@@ -267,16 +256,13 @@ always @(posedge clk32) begin
   else begin
     case (sample_state)
      `SAMPLE_NEWADDR : begin
-       en_sample <= 1'b1;
        sample_state<= `SAMPLE_UPNOTE;
      end
      `SAMPLE_UPNOTE : begin
-       en_sample <= 1'b1;
        sample_state <= `SAMPLE_READ;
        //Next cycle wave_advance will get the correct value
      end
      `SAMPLE_READ : begin
-       en_sample <= 1'b1;
        sample_state <= `SAMPLE_WRITE;
        if (addr_sample <= `MAX_SND_MEM)
          we_sample <= 1'b1;
@@ -293,20 +279,16 @@ always @(posedge clk32) begin
       if (count < 4* `MAX_SND_MEM) begin
         if (addr_sample < `MAX_SND_MEM) begin
           addr_sample <= addr_sample + 1;
+          sample_state <= `SAMPLE_NEWADDR;
         end
-      else begin
-        addr_sample <= 8'h00;
-      end
-      en_sample <= 1'b1;
-      sample_state <= `SAMPLE_NEWADDR;
+        //sample_state <= `SAMPLE_NEWADDR;
       end
       else if (count == 11'd666) begin
         sample_state <= `SAMPLE_NEWADDR;
-        en_sample <= 1'b1;
+        addr_sample <= 8'h00;
       end
       else
         sample_state <= `SAMPLE_WRITE;
-        en_sample <= 1'b0;
       end
   endcase
   end
