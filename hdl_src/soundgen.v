@@ -25,7 +25,8 @@ module soundgen(
     input wavetable_r_valid,
     input [9:0] wavetable_l,
     input wavetable_l_valid,
-    input [17:0] volume,
+    input [17:0] volume_adsr,
+    input [17:0] velocity,
     input tick48k,
     output reg [17:0] sound_r,
     output reg [17:0] sound_l
@@ -37,11 +38,13 @@ wire [17:0] output_sample;
 wire [17:0] sample_latch;
 wire [17:0] mix_result;
 wire en;
+wire [35:0] mul_result;
 
 reg r_valid, l_valid;
 reg [17:0] sample_r;
 reg [17:0] sample_l;
 
+assign mul_result = volume_adsr * velocity;
 
 assign addr = (wavetable_r_valid == 1'b1) ? wavetable_r :
               (wavetable_l_valid == 1'b1) ? wavetable_l :
@@ -93,7 +96,7 @@ RAMB16_S18_wavetable wavetable (
 dca apply_env (
     .clk(clk), 
     .sample(out_data), 
-    .envelope(volume), 
+    .envelope(mul_result[35:18]), 
     .result(output_sample)
     );
 

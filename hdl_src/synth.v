@@ -306,7 +306,8 @@ soundgen soundgen0 (
     .wavetable_r_valid(sample_state == `SAMPLE_UPNOTE), 
     .wavetable_l(wavetable_4left), 
     .wavetable_l_valid(sample_state == `SAMPLE_READ), 
-    .volume(volume_sample_r), 
+    .volume_adsr(volume_sample_r), 
+    .velocity({1'b0,velocity_sample_r,10'b0000000000}),
     .tick48k(count==11'd666), 
     .sound_r(sound_r), 
     .sound_l(sound_l)
