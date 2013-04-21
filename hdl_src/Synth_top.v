@@ -30,6 +30,11 @@ wire read;
 wire read_resync;
 wire [7:0] data_w, data_w_resync;
 
+wire c_valid;
+wire [6:0] c_cmd;
+wire [7:0] c_byte0, c_byte1, c_byte2;
+
+
 wire rst;
 wire rst_cmd;
 reg [3:0] rst_cpt;
@@ -45,33 +50,41 @@ synth2 synth0 (
     .clk32(clk32), 
     .rst(rst),
     
-	 .note_pressed(note_pressed), 
+    .note_pressed(note_pressed), 
     .note_released(note_released),
     .note_keypress(note_keypress),
     .note_channelpress(note_channelpress),	 
     .note_interface(note), 
     .velocity(velocity),
-	 .channel(channel),
+    .channel(channel),
 	 
-	 .audio_r(audio_r),
-	 .audio_l(audio_l),
+    .audio_r(audio_r),
+    .audio_l(audio_l),
     .state({led4,led3,led2,led1}),
-	 .read_back(read),
-	 .data(data_w)
-    );
+    .read_back(read),
+    .data(data_w),
+    // controler control
+    .c_valid(c_valid),
+    .c_cmd(c_cmd),
+    .c_byte0(c_byte0),
+    .c_byte1(c_byte1),
+    .c_byte2(c_byte2) 
+
+);
 
 resync_data resync_valid0 (
     .rst(rst),
-	 .clkA(clk96m), 
+    .clkA(clk96m), 
     .validA(valid_data), 
     .dataA(data), 
     .clkB(clk32), 
     .validB(valid_data_resync), 
     .dataB(data_resync)
-    );
+);
 	 
-resync_data resync_valid1 (    .rst(rst),
-	 .clkA(clk32), 
+resync_data resync_valid1 (    
+    .rst(rst),
+    .clkA(clk32), 
     .validA(read), 
     .dataA(data_w), 
     .clkB(clk96m), 
@@ -86,10 +99,10 @@ uart_ss uart_ss0 (
     .usb_rx(usb_tx),
     .usb_tx(usb_rx),	 
     .data(data),
-	 .valid_data(valid_data),
-	 .write_data(read_resync),
-	 .di(data_w_resync)
-    );
+    .valid_data(valid_data),
+    .write_data(read_resync),
+    .di(data_w_resync)
+);
 
 //assign led1 = data[0] | data[1];
 //assign led2 = data[2] | data[3];
@@ -106,14 +119,20 @@ midi_ctrl midi_ctrl (
     .data(data_resync), 
     .note_presse(note_pressed), 
     .note_release(note_released),
-	 .note_keypress(note_keypress),
-	 .note_channelpress(note_channelpress),
+    .note_keypress(note_keypress),
+    .note_channelpress(note_channelpress),
     .channel(channel),	 
     .note(note), 
     .velocity(velocity),
-	 .rst_cmd(rst_cmd),
-	 .read(read)
-    );
+    .rst_cmd(rst_cmd),
+    .read(read),
+    // controler control
+    .c_valid(c_valid),
+    .c_cmd(c_cmd),
+    .c_byte0(c_byte0),
+    .c_byte1(c_byte1),
+    .c_byte2(c_byte2) 
+);
 
 //assign led4 = (velocity == 7'b0000000)? 1 : 0;
 

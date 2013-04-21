@@ -6,7 +6,7 @@ LDFLAGS = -lasound
 
 all : midi_papilio_if
 
-midi_papilio_if : midi_papilio_if.o serialib.o stats.o
+midi_papilio_if : midi_papilio_if.o serialib.o stats.o tune.o
 	g++ -o $@ $(INC) $(CCFLAGS) $^ $(LDFLAGS) 
 
 %.o : %.cpp 

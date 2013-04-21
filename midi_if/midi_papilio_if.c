@@ -10,6 +10,7 @@
 #include "serialib.h"
 
 #include "stats.h"
+#include "tune.h"
 
 
 #define FPRINTF_MIDI_EVENT(...) fprintf(stdout,__VA_ARGS__)
@@ -17,15 +18,25 @@
 
 
 serialib ttyusb1;
-char buffer[3];
+char buffer[7];
+#define SYNTH_C_CMD 0
+#define SYNTH_C_BYTE0 1
+#define SYNTH_C_BYTE1 2
+#define SYNTH_C_BYTE2 3
+#define SYNTH_MIDI0 4
+#define SYNTH_MIDI1 5
+#define SYNTH_MIDI2 6
+
 
 stats db;
+tune db_tune;
+
 
 void printf_m(char * buf) {
   fprintf(stdout,"## begin ##\n");
-  fprintf(stdout,"ser.write(struct.pack('B',0x%02x))\n",(uint8_t) (0xff & buf[0]));
-  fprintf(stdout,"ser.write(struct.pack('B',0x%02x))\n",buf[1]);
-  fprintf(stdout,"ser.write(struct.pack('B',0x%02x))\n",buf[2]);
+  for (uint8_t i=0; i<7; i++) { 
+    fprintf(stdout,"ser.write(struct.pack('B',0x%02x))\n",(uint8_t) (0xff & buf[i]));
+  }
   fprintf(stdout,"## end ##\n");
 }
 
@@ -77,33 +88,51 @@ void midi_action(snd_seq_t *seq_handle) {
                 ev->data.control.channel, ev->data.note.channel,
                 ev->data.note.note, ev->data.note.velocity, 
                 ev->data.note.off_velocity, ev->data.note.duration);
-        buffer[0] = (uint8_t) ((9 << 4) | (ev->data.note.channel & 0xf));
-        buffer[1] = (uint8_t) ev->data.note.note & 0x7f;
-        buffer[2] = (uint8_t) ev->data.note.velocity & 0x7f;
-        ttyusb1.Write(&buffer,3);
-        printf_m(buffer);
-        db.note_on( ev->data.control.channel,ev->data.note.note);
+        buffer[SYNTH_C_CMD] = 0x0;
+        buffer[SYNTH_C_BYTE0] = db_tune.add_tune(ev->data.control.channel,ev->data.note.note);
+        buffer[SYNTH_C_BYTE1] = 0xff;
+        buffer[SYNTH_C_BYTE2] = 0xff;
+        buffer[SYNTH_MIDI0] = (uint8_t) ((9 << 4) | (ev->data.note.channel & 0xf));
+        buffer[SYNTH_MIDI1] = (uint8_t) ev->data.note.note & 0x7f;
+        buffer[SYNTH_MIDI2] = (uint8_t) ev->data.note.velocity & 0x7f;
+        if ((ev->data.note.channel & 0xf) != 9) {
+          // For the momment filter channel 10 reserved for percussion
+          ttyusb1.Write(&buffer,7);
+          printf_m(buffer);
+          db.note_on( ev->data.control.channel,ev->data.note.note);
+
+        }
         break;        
       case SND_SEQ_EVENT_NOTEOFF: 
         FPRINTF_MIDI_EVENT( "note off event on Channel %2d: note channel %2d, note %2d, velocity %2d, off_velocity %2d, duration %d\n",
                 ev->data.control.channel, ev->data.note.channel,
                 ev->data.note.note, ev->data.note.velocity, 
                 ev->data.note.off_velocity, ev->data.note.duration);
-        buffer[0] = (uint8_t) ((8 << 4) | (ev->data.note.channel & 0xf));
-        buffer[1] = (uint8_t) ev->data.note.note & 0x7f;
-        buffer[2] = (uint8_t) ev->data.note.velocity & 0x7f;
-        ttyusb1.Write(&buffer,3);
-        printf_m(buffer);
-        db.note_off( ev->data.control.channel,ev->data.note.note);
+        buffer[SYNTH_C_CMD] = 0x0;
+        buffer[SYNTH_C_BYTE0] = db_tune.remove_tune(ev->data.control.channel,ev->data.note.note);
+        buffer[SYNTH_C_BYTE1] = 0xff;
+        buffer[SYNTH_C_BYTE2] = 0xff;
+        buffer[SYNTH_MIDI0] = (uint8_t) ((8 << 4) | (ev->data.note.channel & 0xf));
+        buffer[SYNTH_MIDI1] = (uint8_t) ev->data.note.note & 0x7f;
+        buffer[SYNTH_MIDI2] = (uint8_t) ev->data.note.velocity & 0x7f;
+        if ((ev->data.note.channel & 0xf) != 9) {
+          // For the momment filter channel 10 reserved for percussion
+          ttyusb1.Write(&buffer,7);
+          printf_m(buffer);
+          db.note_off( ev->data.control.channel,ev->data.note.note);
+        }
         break;        
       case SND_SEQ_EVENT_KEYPRESS:
         FPRINTF_MIDI_EVENT( "keypress event on Channel %2d, note: %5d, velocity %d       \n",
                 ev->data.note.channel, ev->data.note.note, ev->data.note.velocity);
         
-        buffer[0] = (uint8_t) (0xa << 4) | (ev->data.note.channel & 0xf);
-        buffer[1] = (uint8_t) ev->data.note.note & 0x7f;
-        buffer[2] = (uint8_t) ev->data.note.velocity & 0x7f;
-        ttyusb1.Write(&buffer,3);
+        buffer[SYNTH_MIDI0] = (uint8_t) (0xa << 4) | (ev->data.note.channel & 0xf);
+        buffer[SYNTH_MIDI1] = (uint8_t) ev->data.note.note & 0x7f;
+        buffer[SYNTH_MIDI2] = (uint8_t) ev->data.note.velocity & 0x7f;
+        if ((ev->data.note.channel & 0xf) != 9) {
+          // For the momment filter channel 10 reserved for percussion
+          ttyusb1.Write(&(buffer[SYNTH_MIDI0]),3);
+        }
         break;
       case SND_SEQ_EVENT_CONTROLLER: 
         FPRINTF_MIDI_EVENT( "Control event on Channel %2d: %5d       \n",
@@ -115,9 +144,12 @@ void midi_action(snd_seq_t *seq_handle) {
       case SND_SEQ_EVENT_CHANPRESS :
         FPRINTF_MIDI_EVENT( "channel pressure change event on Channel %2d: %5d       \n",
                 ev->data.control.channel, ev->data.control.value);
-        buffer[0] = (uint8_t) (0xd << 4) | (ev->data.control.channel & 0xf);
-        buffer[1] = (uint8_t) ev->data.control.value & 0x7f;
-        ttyusb1.Write(&buffer,2);
+        buffer[SYNTH_MIDI0] = (uint8_t) (0xd << 4) | (ev->data.control.channel & 0xf);
+        buffer[SYNTH_MIDI1] = (uint8_t) ev->data.control.value & 0x7f;
+        if ((ev->data.note.channel & 0xf) != 9) {
+          // For the momment filter channel 10 reserved for percussion
+          ttyusb1.Write(&(buffer[SYNTH_MIDI0]),2);
+        }
       case SND_SEQ_EVENT_PITCHBEND:
         FPRINTF_MIDI_EVENT( "Pitchbender event on Channel %2d: %5d   \n", 
                 ev->data.control.channel, ev->data.control.value);

@@ -13,10 +13,16 @@ module synth2(
   output audio_l,
   output[3:0] state,
   input read_back,
-  output reg [7:0] data
+  output reg [7:0] data,
+  // controler control
+  input c_valid,
+  input [6:0] c_cmd,
+  input [7:0] c_byte0,
+  input [7:0] c_byte1,
+  input [7:0] c_byte2 
 );
 
-`define MAX_SND_MEM 8'd31
+`define MAX_SND_MEM 8'd255
 
 `define ATTACK 3'd1
 `define DECAY 3'd2
@@ -28,14 +34,6 @@ module synth2(
 `define SAMPLE_UPNOTE 2'd1
 `define SAMPLE_READ 2'd2
 `define SAMPLE_WRITE 2'd3
-
-`define CTRL_IDLE 3'd1
-`define CTRL_WAITDATA 3'd2
-`define CTRL_FIND_NOTEON 3'd3
-`define CTRL_FIND_NOTEOFF 3'd4
-`define CTRL_WAIT 3'd5
-`define CTRL_ERROR 3'd6
-
 
 reg [7:0] addr_ctrl;
 reg [7:0] store_addr_ctrl;
@@ -49,9 +47,7 @@ reg en_sample;
 wire [71:0] dataout_sample;
 wire [71:0] datain_sample;
 
-reg [7:0] loop_cpt;
 reg [10:0] count;
-reg [15:0] count_cmd = 16'h0000;
 
 wire [6:0] note_ctrl_r;
 wire [3:0] channel_ctrl_r;
@@ -94,9 +90,6 @@ wire [17:0] volume_cal;
 reg [1:0] sample_state;
 reg [2:0] ctrl_state;
 
-wire overflow;
-reg [1:0] error;
-
 
 wire [6:0] note_interface_fifoout;
 wire [6:0] velocity_fifoout;
@@ -117,70 +110,9 @@ wire [17:0] sound_l;
 // synthesis translate_off
 
 // for debugging
-reg [6:0] note_sample_debug[0:31];
-reg [3:0] channel_sample_debug[0:31];
-reg [6:0] velocity_sample_debug[0:31];
-reg [17:0] volume_sample_debug[0:31];
-reg [18:0] wavetable_sample_debug[0:31];
-reg note_pressed_sample_debug[0:31];
-reg note_released_sample_debug[0:31];
-reg [2:0] adsr_state_sample_debug[0:31];
 
 // synthesis translate_on
 
-always @(posedge clk32) begin
-  if (rst == 1'b1) begin
-  data <= 8'h00;
-  end
-  else if (read_back == 1'b1) begin
-    if (velocity == 7'h00)
-	   data <= count_cmd[15:8];
-	 else if (velocity == 7'h01)
-	   data <= count_cmd[7:0];
-	 else if (velocity == 7'h02)
-	   data <= loop_cpt;
-	 else
-	   data <= 8'h55;
-  end
-end
-  
-always @(posedge clk32) begin
-  if (rst == 1'b1) begin
-  error <= 2'b00;
-  end
-  else if ( overflow == 1'b1 && loop_cpt != 8'hff )
-    error <= 2'b10;
-  else if ( overflow != 1'b1 && loop_cpt == 8'hff )
-   error <= 2'b01;
-//  else if (overflow == 1'b1 && loop_cpt == 8'hff )
-//   error <= 2'b11;
-//  else
-//   error <= 2'b00;
-end
-
-fifo fifo0 (
-  .clk(clk32), // input clk
-  .srst(rst), // input srst
-  .din({note_interface,velocity,channel,note_pressed,note_released,note_keypress,note_channelpress}), // input [21 : 0] din
-  //.wr_en(note_pressed|note_released|note_keypress|note_channelpress), // input wr_en
-  .wr_en(note_pressed|note_released), // input wr_en
-  .rd_en(we_ctrl), // input rd_en
-  .dout(
-  {note_interface_fifoout,
-   velocity_fifoout,
-	channel_fifoout,
-	note_pressed_fifoout,
-	note_released_fifoout,
-	note_keypress_fifoout,
-	note_channelpress_fifoout}), // output [21 : 0] dout
-  .full(full), // output full
-  .overflow(overflow), // output overflow
-  .empty(empty) // output empty
-);
-
-assign state[3] = note_pressed_fifoout;
-assign state[2] = (ctrl_state == `CTRL_ERROR) ? 1'b1 : 1'b0;
-assign state[1:0] = error;
 
 assign {wavetable_ctrl_r,
         volume_ctrl_r,
@@ -202,109 +134,41 @@ assign datain_ctrl = {
 		  adsr_state_ctrl_w,
 		  12'b111111111111};
 
-
 always @(posedge clk32) begin
-  if (rst == 1'b1) begin
-    addr_ctrl <= 8'h00;
-	 store_addr_ctrl <= 8'h00;
-    we_ctrl <= 1'b0;
-	 ctrl_state <= `CTRL_IDLE;
-	 loop_cpt <= 8'h00;
+ if (rst == 1'b1) begin
 	 channel_ctrl_w <= 4'h0;
 	 note_ctrl_w <= 7'h00;
 	 velocity_ctrl_w <= 7'h00;
 	 note_press_ctrl_w <= 1'b0;
 	 note_release_ctrl_w <= 1'b0;
 	 adsr_state_ctrl_w <= `BLANK;
-  end
-  else begin
-    
-    case(ctrl_state)
-	 `CTRL_IDLE :
-	   begin
-		if (empty == 1'b1 || (addr_sample == addr_ctrl && en_sample ==1'b1)) begin
-		// If there is no data or if we can't write   
-		  ctrl_state <= `CTRL_IDLE;
-		  store_addr_ctrl <= addr_ctrl -1;
-		end
-		else begin
-        // empty == 1'b0
-		  if ((note_pressed_fifoout == 1'b1) && 
-		      ( 
-			    (note_ctrl_r == note_interface_fifoout && 
-			     channel_ctrl_r == channel_fifoout) ||
-				  (adsr_state_ctrl_r == `BLANK && loop_cpt > 0 && note_press_ctrl_r == 1'b0)
-				 )
-				) begin
-			 ctrl_state <= `CTRL_FIND_NOTEON;
-        end
-		  else if ((note_released_fifoout == 1'b1) &&
-		            (note_ctrl_r == note_interface_fifoout &&
-						 channel_ctrl_r == channel_fifoout)
-		           ) begin
-			 ctrl_state <= `CTRL_FIND_NOTEOFF;	
-		  end
-		  else if (loop_cpt == 8'hff)
-		    ctrl_state <= `CTRL_ERROR;
-		  else begin
-		    if (addr_ctrl == store_addr_ctrl)
-			   loop_cpt <= loop_cpt +1;
-			 if (addr_ctrl != `MAX_SND_MEM)
-			   addr_ctrl <= addr_ctrl +1;
-			 else
-			   addr_ctrl <= 8'h00;
-			 ctrl_state <= `CTRL_WAITDATA;
-		  end
-		end
-	   end	
-    `CTRL_FIND_NOTEON :
-	   begin
-		ctrl_state <= `CTRL_WAIT;
-		we_ctrl <= 1'b1;
-	   note_ctrl_w <= note_interface_fifoout;
-      channel_ctrl_w <= channel_fifoout;
-      velocity_ctrl_w <= velocity_fifoout;
-      volume_ctrl_w <= 18'h00000;
-      wavetable_ctrl_w <= wavetable_ctrl_r;
-      note_press_ctrl_w <= 1'b1;
-      note_release_ctrl_w <= 1'b0;
-      adsr_state_ctrl_w <= `BLANK;
-		loop_cpt <= 8'h00;
-		count_cmd <= count_cmd + 1;
-		end
-	 `CTRL_FIND_NOTEOFF :
-	   begin
-		ctrl_state <= `CTRL_WAIT;
-		we_ctrl <= 1'b1;
-	   note_ctrl_w <= note_ctrl_r;
-      channel_ctrl_w <= channel_ctrl_r;
-      velocity_ctrl_w <= velocity_fifoout;
-      volume_ctrl_w <= volume_ctrl_r;
-      wavetable_ctrl_w <= wavetable_ctrl_r;
-      note_press_ctrl_w <= 1'b0;
-      note_release_ctrl_w <= 1'b1;
-      adsr_state_ctrl_w <= adsr_state_ctrl_r;
-      loop_cpt <= 8'h00;
-		count_cmd <= count_cmd + 1;
-		end
-	 `CTRL_ERROR :
-	   begin
-		    ctrl_state <= `CTRL_ERROR;
-		end
-	 `CTRL_WAIT :
-	   begin
-		  we_ctrl <= 1'b0;
-		  ctrl_state <= `CTRL_IDLE;
-		end
-	 `CTRL_WAITDATA :
-	 begin
-	   ctrl_state <= `CTRL_IDLE;
-
-	 end
-		
-	 endcase 
+         addr_ctrl <= 8'h00;
+ end
+ else begin
+   if (note_pressed == 1'b1 || note_released == 1'b1) begin
+     addr_ctrl <= c_byte0;
+     we_ctrl <= 1'b1;
+     note_press_ctrl_w <= note_pressed;
+     note_release_ctrl_w <= note_released;
+     velocity_ctrl_w <= velocity;
+     if (note_pressed == 1'b1) begin
+       note_ctrl_w <= note_interface;
+       channel_ctrl_w <= channel;
+       volume_ctrl_w <= 18'h00000;
+       adsr_state_ctrl_w <= `BLANK; 
+     end
+     else begin // note_released
+       note_ctrl_w <= note_interface;
+       channel_ctrl_w <= channel;
+       volume_ctrl_w <= volume_ctrl_r;
+       adsr_state_ctrl_w <= adsr_state_ctrl_r;
+     end
+   end
+   else begin
+     we_ctrl <= 1'b0;
+   end
    
-  end
+ end
 end
 
 DP_ram DP_ram0 (
@@ -481,18 +345,6 @@ dac16 inst_dac16_l (
 
 // for debugging
 
-always @(posedge clk32) begin
-  if ((sample_state == `SAMPLE_WRITE) && (addr_sample <= `MAX_SND_MEM)) begin
-    note_sample_debug[addr_sample] <= note_sample_r;
-    channel_sample_debug[addr_sample] <= channel_sample_r;
-    velocity_sample_debug[addr_sample] <= velocity_sample_r;
-    volume_sample_debug[addr_sample] <= volume_sample_w;
-    wavetable_sample_debug[addr_sample] <= wavetable_sample_w;
-    note_pressed_sample_debug[addr_sample] <= note_pressed_sample_w;
-    note_released_sample_debug[addr_sample] <= note_released_sample_w;
-    adsr_state_sample_debug[addr_sample] <= adsr_state_sample_w;
-  end
-end
 // synthesis translate_on
 
 endmodule
