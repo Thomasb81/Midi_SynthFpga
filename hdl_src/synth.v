@@ -133,6 +133,8 @@ always @(posedge clk32) begin
    note_release_ctrl_w <= 1'b0;
    adsr_state_ctrl_w <= `BLANK;
    addr_ctrl <= 8'h00;
+   sustain_ctrl_w <= 7'b0100000;
+   wavetable_ctrl_w <= 19'h00000;
  end
  else begin
    if (note_pressed == 1'b1 || note_released == 1'b1) begin
@@ -214,7 +216,7 @@ sustain_sample_r,
 dummy_5bits_sample};
 
 adsr_mngt2 adsr_mngt2_0(
-.velocity_value(velocity_sample_r),
+//.velocity_value(velocity_sample_r),
 .sustain_value(sustain_sample_r),
 .attack_rate(7'b0100000),
 .decay_rate(7'b0100000),
@@ -229,6 +231,7 @@ adsr_mngt2 adsr_mngt2_0(
 .o_volume(volume_cal)
 );
 
+// count == 666 => 48Khz @ clk32 == 32Mhz
 always @(posedge clk32) begin
   if (rst == 1'b1) begin
     count <= 11'h000;
@@ -252,6 +255,7 @@ always @(posedge clk32) begin
     note_pressed_sample_w <= 1'b0;
     adsr_state_sample_w <= 1'b0;
     volume_sample_w <= 18'h00000;
+    sustain_sample_w <= 7'b0000000;
   end
   else begin
     case (sample_state)
@@ -281,7 +285,6 @@ always @(posedge clk32) begin
           addr_sample <= addr_sample + 1;
           sample_state <= `SAMPLE_NEWADDR;
         end
-        //sample_state <= `SAMPLE_NEWADDR;
       end
       else if (count == 11'd666) begin
         sample_state <= `SAMPLE_NEWADDR;

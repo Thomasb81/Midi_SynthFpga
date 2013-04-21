@@ -52,11 +52,11 @@ assign en = wavetable_r_valid | wavetable_l_valid | r_valid | l_valid;
 always @(posedge clk) begin
   if (rst == 1'b1) begin
     r_valid <= 1'b0;
-	 l_valid <= 1'b0;
-	 sample_r <= 18'h20000;
-	 sample_l <= 18'h20000;
-	 sound_r <= 18'h20000;
-	 sound_l <= 18'h20000;
+    l_valid <= 1'b0;
+    sample_r <= 18'h20000;
+    sample_l <= 18'h20000;
+    sound_r <= 18'h20000;
+    sound_l <= 18'h20000;
   end
   else begin
     r_valid <= wavetable_r_valid;
