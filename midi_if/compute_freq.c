@@ -2,6 +2,14 @@
 #include <stdio.h>
 #include <stdint.h>
 
+/*
+http://en.wikipedia.org/wiki/Note
+http://subsynth.sourceforge.net/midinote2freq.html
+
+*/
+
+
+
 #define INIT_LINE_SIZE 64
 
 int main () {
