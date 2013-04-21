@@ -45,7 +45,7 @@ reg [17:0] sample_l;
 
 assign addr = (wavetable_r_valid == 1'b1) ? wavetable_r :
               (wavetable_l_valid == 1'b1) ? wavetable_l :
-				  10'b0000000000;
+              10'b0000000000;
 
 assign en = wavetable_r_valid | wavetable_l_valid | r_valid | l_valid;
 
@@ -60,28 +60,28 @@ always @(posedge clk) begin
   end
   else begin
     r_valid <= wavetable_r_valid;
-	 l_valid <= wavetable_l_valid;
-
-	 if (r_valid == 1'b1) begin
-	    sample_r <= mix_result;
-	 end
-	 else if (l_valid == 1'b1) begin
-	   sample_l <= mix_result;
-	 end
-	 
-	 if (tick48k == 1'b1) begin
-	   sound_r <= sample_r;
-		sound_l <= sample_l;
-		sample_r <= 18'h20000;
-		sample_l <= 18'h20000;
-	 end
-	 
+    l_valid <= wavetable_l_valid;
+    
+    if (r_valid == 1'b1) begin
+      sample_r <= mix_result;
+    end
+    else if (l_valid == 1'b1) begin
+      sample_l <= mix_result;
+    end
+ 
+    if (tick48k == 1'b1) begin
+      sound_r <= sample_r;
+      sound_l <= sample_l;
+      sample_r <= 18'h20000;
+      sample_l <= 18'h20000;
+    end
+ 
   end
 end
 
 assign sample_latch = (r_valid== 1'b1) ? sample_r :
                       (l_valid== 1'b1) ? sample_l :
-							 18'h20000;
+                      18'h20000;
 
 RAMB16_S18_wavetable wavetable (
     .clk(clk), 
