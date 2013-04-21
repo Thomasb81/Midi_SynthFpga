@@ -137,7 +137,7 @@ always @(posedge clk32) begin
    wavetable_ctrl_w <= 19'h00000;
  end
  else begin
-   if (note_pressed == 1'b1 || note_released == 1'b1) begin
+   if (note_pressed == 1'b1 || note_released == 1'b1 || note_keypress == 1'b1) begin
      addr_ctrl <= addr;
      we_ctrl <= 1'b1;
      note_press_ctrl_w <= note_pressed;
@@ -149,7 +149,7 @@ always @(posedge clk32) begin
        volume_ctrl_w <= 18'h00000;
        adsr_state_ctrl_w <= `BLANK; 
      end
-     else begin // note_released
+     else begin // note_released | note_keypress
        note_ctrl_w <= note;
        channel_ctrl_w <= channel;
        volume_ctrl_w <= volume_ctrl_r;

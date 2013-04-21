@@ -61,7 +61,7 @@ always @(posedge clk) begin
             note_presse <= 1'b1;
           else if (cmd == 3'b000 && valid == 1'b1) //cmd is note released
             note_release <= 1'b1;
-          else if (cmd == 3'b010 && valid == 1'b1) //cmd is keypress
+          else if (cmd == 3'b101 && valid == 1'b1) //cmd is keypress
             note_keypress <= 1'b1;
           state <= 4'b100;
         end

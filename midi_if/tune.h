@@ -2,14 +2,22 @@
 #define _TUNE_H_
 
 #include <stdint.h>
+#include "serialib.h"
 
 #define MAX_TUNE 128
+
+#define SYNTH_MIDI0 0
+#define SYNTH_MIDI1 1
+#define SYNTH_MIDI2 2
+#define SYNTH_MIDI3 3
+
+
 
 using namespace std;
 
 class key {
   
-  private:
+  public:
     uint8_t _channel;
     uint8_t _note;
 
@@ -41,11 +49,14 @@ class tune {
     tune(){
       _cpt_add = 0;
     };
-    ~tune(){};
+    ~tune(){
+    };
 
-    uint8_t add_tune(uint8_t channel, uint8_t note);
-    uint8_t remove_tune(uint8_t channel, uint8_t note);
-    uint8_t find_tune (uint8_t channel, uint8_t note);
+    void note_on(uint8_t channel, uint8_t note, uint8_t value);
+    void note_off(uint8_t channel, uint8_t note, uint8_t value);
+    //uint8_t find_tune (uint8_t channel, uint8_t note);
+    void apply_keypress(uint8_t channel, uint8_t note, uint8_t value);
+    void apply_channelpress(uint8_t channel, uint8_t value);
    
 };
 
