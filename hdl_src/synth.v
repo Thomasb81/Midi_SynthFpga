@@ -256,13 +256,13 @@ always @(posedge clk32) begin
   if (rst == 1'b1) begin
     addr_sample <= 8'h00;
     we_sample <= 1'b0;
-	 en_sample <= 1'b1;
+    en_sample <= 1'b1;
     sample_state <= `SAMPLE_NEWADDR;
-	 wavetable_sample_w <= 19'h00000;
-	 note_released_sample_w <= 1'b0;
-	 note_pressed_sample_w <= 1'b0;
-	 adsr_state_sample_w <= 1'b0;
-	 volume_sample_w <= 18'h00000;
+    wavetable_sample_w <= 19'h00000;
+    note_released_sample_w <= 1'b0;
+    note_pressed_sample_w <= 1'b0;
+    adsr_state_sample_w <= 1'b0;
+    volume_sample_w <= 18'h00000;
   end
   else begin
     case (sample_state)
