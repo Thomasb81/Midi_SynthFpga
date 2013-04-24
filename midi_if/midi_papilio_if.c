@@ -117,6 +117,7 @@ void midi_action(snd_seq_t *seq_handle) {
       case SND_SEQ_EVENT_PITCHBEND:
         FPRINTF_MIDI_EVENT( "Pitchbender event on Channel %2d: %5d   \n", 
                 ev->data.control.channel, ev->data.control.value);
+        db_tune.apply_pitchbender(ev->data.control.channel, ev->data.control.value);
 	break;
       case SND_SEQ_EVENT_CONTROL14 :
         FPRINTF_MIDI_EVENT( "14bit controller event on Channel %2d\n", 

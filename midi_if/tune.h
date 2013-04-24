@@ -57,6 +57,7 @@ class tune {
     //uint8_t find_tune (uint8_t channel, uint8_t note);
     void apply_keypress(uint8_t channel, uint8_t note, uint8_t value);
     void apply_channelpress(uint8_t channel, uint8_t value);
+    void apply_pitchbender(uint8_t channel, int16_t value);
    
 };
 

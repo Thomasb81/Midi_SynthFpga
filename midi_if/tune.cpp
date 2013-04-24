@@ -1,5 +1,7 @@
 #include "tune.h"
 
+#include <stdio.h>
+
 extern serialib ttyusb1;
 char buffer[7];
 
@@ -107,3 +109,21 @@ void tune::apply_keypress(uint8_t channel, uint8_t note, uint8_t value) {
   }
   return ; // dirty !
 } 
+
+void tune::apply_pitchbender(uint8_t channel, int16_t value) {
+
+  uint16_t local_value = value + 0x2000;
+  buffer[SYNTH_MIDI0] = (uint8_t) (0xe << 4) | (channel & 0xf);
+  buffer[SYNTH_MIDI1] = (uint8_t) (local_value>>8);
+  buffer[SYNTH_MIDI2] = (uint8_t) (local_value);
+  buffer[SYNTH_MIDI3] = 0;
+  printf("%02x %02x %02x %02x\n", 
+  (uint8_t) buffer[SYNTH_MIDI0],
+  (uint8_t) buffer[SYNTH_MIDI1],
+  (uint8_t) buffer[SYNTH_MIDI2],
+  (uint8_t) buffer[SYNTH_MIDI3]
+  );
+  if (channel != 9) {
+      ttyusb1.Write(&(buffer[SYNTH_MIDI0]),4);
+  }
+}

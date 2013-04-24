@@ -6,10 +6,10 @@ output usb_rx; // connected to fpga_uart_tx
 input usb_tx; // connected to fpga_uart_rx
 output audio_r;
 output audio_l;
-output led1;
-output led2;
-output led3;
-output led4;
+output reg led1;
+output reg led2;
+output reg led3;
+output reg led4;
 
 
 wire clk96m;
@@ -24,6 +24,7 @@ wire [6:0] velocity;
 wire note_pressed;
 wire note_released;
 wire note_keypress;
+wire pitch_wheel;
 wire [3:0] channel;
 wire read;
 wire read_resync;
@@ -47,6 +48,7 @@ synth2 synth0 (
     .note_pressed(note_pressed), 
     .note_released(note_released),
     .note_keypress(note_keypress),
+    .pitch_wheel(pitch_wheel),
     .note(note), 
     .velocity(velocity),
     .channel(channel),
@@ -91,11 +93,21 @@ uart_ss uart_ss0 (
     .di(data_w_resync)
 );
 
+/*
 assign led1 = data[0] | data[1];
 assign led2 = data[2] | data[3];
 assign led3 = data[4] | data[5];
 assign led4 = data[6] | data[7];
+*/
 
+always @(posedge clk32) begin
+  if (pitch_wheel == 1'b1) begin
+  led4 <= note[5];
+  led3 <= note[4];
+  led2 <= note[3];
+  led1 <= note[2];
+  end
+end
 
 
 
@@ -107,6 +119,7 @@ midi_ctrl midi_ctrl (
     .note_presse(note_pressed), 
     .note_release(note_released),
     .note_keypress(note_keypress),
+    .pitch_wheel(pitch_wheel),
     .note(note), 
     .velocity(velocity),
     .channel(channel),	 

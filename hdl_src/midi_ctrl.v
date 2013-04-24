@@ -7,6 +7,7 @@ module midi_ctrl(
     output reg note_presse,
     output reg note_release,
     output reg note_keypress,
+    output reg pitch_wheel,
     output reg[6:0] note,
     output reg[6:0] velocity,
     output reg [3:0] channel,
@@ -31,6 +32,7 @@ always @(posedge clk) begin
     addr <= 8'h00;
     valid <= 1'b0;
     rst_cmd <= 1'b0;
+    pitch_wheel <= 1'b0;
   end
   else
     case (state)
@@ -63,6 +65,8 @@ always @(posedge clk) begin
             note_release <= 1'b1;
           else if (cmd == 3'b101 && valid == 1'b1) //cmd is keypress
             note_keypress <= 1'b1;
+          else if (cmd == 3'b110 && valid == 1'b1) //cmd is pitch_wheel
+            pitch_wheel <= 1'b1;
           state <= 4'b100;
         end
      3'b100: // reset state
@@ -72,6 +76,7 @@ always @(posedge clk) begin
           note_release <= 1'b0;
           note_presse <= 1'b0;
           note_keypress <= 1'b0;
+          pitch_wheel <= 1'b0;
        end
      endcase
 end

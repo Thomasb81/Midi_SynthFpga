@@ -5,6 +5,7 @@ module synth2(
   input note_pressed,
   input note_released,
   input note_keypress,
+  input pitch_wheel,
   input [6:0] note,
   input [6:0] velocity,
   input [3:0] channel,
@@ -92,11 +93,39 @@ wire [4:0] dummy_5bits_sample;
 wire [17:0] sound_r;
 wire [17:0] sound_l;
 
+wire[9:0] note_calculated;
+reg [4:0] pitchwhell_chan[0:15];
+
 // synthesis translate_off
 
 // for debugging
 
 // synthesis translate_on
+
+always @(posedge clk32) begin
+ if (rst == 1'b1) begin
+     pitchwhell_chan[0] <= 5'b10000;
+     pitchwhell_chan[1] <= 5'b10000;
+     pitchwhell_chan[2] <= 5'b10000;
+     pitchwhell_chan[3] <= 5'b10000;
+     pitchwhell_chan[4] <= 5'b10000;
+     pitchwhell_chan[5] <= 5'b10000;
+     pitchwhell_chan[6] <= 5'b10000;
+     pitchwhell_chan[7] <= 5'b10000;
+     pitchwhell_chan[8] <= 5'b10000;
+     pitchwhell_chan[9] <= 5'b10000;
+     pitchwhell_chan[10] <= 5'b10000;
+     pitchwhell_chan[11] <= 5'b10000;
+     pitchwhell_chan[12] <= 5'b10000;
+     pitchwhell_chan[13] <= 5'b10000;
+     pitchwhell_chan[14] <= 5'b10000;
+     pitchwhell_chan[15] <= 5'b10000;
+ end
+ else begin
+   if (pitch_wheel ==1'b1)
+    pitchwhell_chan[channel] <= note[5:1];
+ end
+end
 
 
 assign {
@@ -180,13 +209,14 @@ DP_ram DP_ram0 (
   .enb(1'b1)
 );
 
+assign note_calculated = {note_sample_r,3'b000} + {5'b00000,pitchwhell_chan[channel_sample_r]} -16;
+
 freqtable RAMB16_S18 (
     .clk(clk32), 
-    .addr({3'b000,note_sample_r}), 
+    .addr(note_calculated), 
     .en(1'b1), 
     .do(wave_advance)
     );
-
 
 // sample interface
 
