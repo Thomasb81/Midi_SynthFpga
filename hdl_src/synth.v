@@ -1,7 +1,15 @@
 `timescale 1ns / 1ps
 module synth2(
-  input clk32,
+  input clk96,
   input rst,
+  
+
+  output sclk,
+  output mosi,
+  input miso,
+  output cs,
+
+
   input note_pressed,
   input note_released,
   input note_keypress,
@@ -102,7 +110,7 @@ reg [4:0] pitchwhell_chan[0:15];
 
 // synthesis translate_on
 
-always @(posedge clk32) begin
+always @(posedge clk96) begin
  if (rst == 1'b1) begin
      pitchwhell_chan[0] <= 5'b10000;
      pitchwhell_chan[1] <= 5'b10000;
@@ -153,7 +161,7 @@ adsr_state_ctrl_w,
 sustain_ctrl_w,
 5'b11111};
 
-always @(posedge clk32) begin
+always @(posedge clk96) begin
  if (rst == 1'b1) begin
    channel_ctrl_w <= 4'h0;
    note_ctrl_w <= 7'h00;
@@ -193,13 +201,13 @@ always @(posedge clk32) begin
 end
 
 DP_ram DP_ram0 (
-  .clka(clk32), // input clka
+  .clka(clk96), // input clka
   .rsta(rst), // input rsta
   .wea(we_ctrl), // input [0 : 0] wea
   .addra(addr_ctrl), // input [7 : 0] addra
   .dina(datain_ctrl), // input [71 : 0] dina
   .douta(dataout_ctrl), // output [71 : 0] douta
-  .clkb(clk32), // input clkb
+  .clkb(clk96), // input clkb
   .rstb(rst), // input rstb
   .web(we_sample), // input [0 : 0] web
   .addrb(addr_sample[7:0]), // input [7 : 0] addrb
@@ -212,7 +220,7 @@ DP_ram DP_ram0 (
 assign note_calculated = {note_sample_r,3'b000} + {5'b00000,pitchwhell_chan[channel_sample_r]} -16;
 
 freqtable RAMB16_S18 (
-    .clk(clk32), 
+    .clk(clk96), 
     .addr(note_calculated), 
     .en(1'b1), 
     .do(wave_advance)
@@ -261,13 +269,14 @@ adsr_mngt2 adsr_mngt2_0(
 .o_volume(volume_cal)
 );
 
-// count == 666 => 48Khz @ clk32 == 32Mhz
-always @(posedge clk32) begin
+// count == 666 => 48Khz @ clk == 32Mhz
+// count == 2000 => 48khz @ clk == 96Mhz
+always @(posedge clk96) begin
   if (rst == 1'b1) begin
     count <= 11'h000;
   end
   else begin
-    if (count <= 11'd666)
+    if (count <= 11'd2000)
 	   count <= count +1;
 	 else
 	   count <= 11'h000;
@@ -275,7 +284,7 @@ always @(posedge clk32) begin
 end
 
 
-always @(posedge clk32) begin
+always @(posedge clk96) begin
   if (rst == 1'b1) begin
     addr_sample <= 8'h00;
     we_sample <= 1'b0;
@@ -316,7 +325,7 @@ always @(posedge clk32) begin
           sample_state <= `SAMPLE_NEWADDR;
         end
       end
-      else if (count == 11'd666) begin
+      else if (count == 11'd2000) begin
         sample_state <= `SAMPLE_NEWADDR;
         addr_sample <= 8'h00;
       end
@@ -330,7 +339,7 @@ end
 assign wavetable_4left = wavetable_sample_r[18:9]+256;
 
 soundgen soundgen0 (
-    .clk(clk32), 
+    .clk(clk96), 
     .rst(rst), 
     .wavetable_r(wavetable_sample_r[18:9]), 
     .wavetable_r_valid(sample_state == `SAMPLE_UPNOTE), 
@@ -338,24 +347,52 @@ soundgen soundgen0 (
     .wavetable_l_valid(sample_state == `SAMPLE_READ), 
     .volume_adsr(volume_sample_r), 
     .velocity({1'b0,velocity_sample_r,10'b0000000000}),
-    .tick48k(count==11'd666), 
+    .tick48k(count==11'd2000), 
     .sound_r(sound_r), 
     .sound_l(sound_l)
     );
 
 dac16 inst_dac16_r (
-    .clk(clk32), 
+    .clk(clk96), 
     .rst(rst), 
     .data(sound_r[17:2]), 
     .dac_out(audio_r)
     );
 
 dac16 inst_dac16_l (
-    .clk(clk32), 
+    .clk(clk96), 
     .rst(rst), 
     .data(sound_l[17:2]), 
     .dac_out(audio_l)
     );
+
+
+
+SDFeed SD_ss0(
+.clk96m(clk96),
+.rst(rst),
+
+.sclk(sclk),
+.mosi(mosi),
+.miso(miso),
+.cs(cs),
+
+.id(8'h00),
+.note_on(note_on),
+.note_off(note_off),
+.completed(),
+
+.rd_en(1'b0),
+.data_out()
+
+);
+
+
+
+
+
+
+
 
 // synthesis translate_off
 
