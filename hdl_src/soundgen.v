@@ -1,23 +1,4 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date:    09:44:42 12/17/2012 
-// Design Name: 
-// Module Name:    soundgen 
-// Project Name: 
-// Target Devices: 
-// Tool versions: 
-// Description: 
-//
-// Dependencies: 
-//
-// Revision: 
-// Revision 0.01 - File Created
-// Additional Comments: 
-//
-//////////////////////////////////////////////////////////////////////////////////
 module soundgen(
     input clk,
     input rst,
@@ -35,56 +16,41 @@ module soundgen(
 wire [9:0] addr;
 wire [17:0] out_data;
 wire [17:0] output_sample;
-wire [17:0] sample_latch;
+reg [17:0] output_sample_reg;
 wire [17:0] mix_result;
 wire en;
 wire [35:0] mul_result;
+reg [17:0] mul_result_reg;
+reg [17:0] volume_adsr_q,velocity_q; 
+reg [9:0] wavetable_r_q, wavetable_l_q;
 
-reg r_valid, l_valid;
+reg valid, valid_q, valid_q2, valid_q3, valid_q4, valid_q5, valid_q6;
 reg [17:0] sample_r;
 reg [17:0] sample_l;
 
-assign mul_result = volume_adsr * velocity;
-
-assign addr = (wavetable_r_valid == 1'b1) ? wavetable_r :
-              (wavetable_l_valid == 1'b1) ? wavetable_l :
-              10'b0000000000;
-
-assign en = wavetable_r_valid | wavetable_l_valid | r_valid | l_valid;
+wire [17:0] mixerA, mixerB;
+wire ctrl_mixerA,ctrl_mixerB, ctrl_muxAddr;
 
 always @(posedge clk) begin
-  if (rst == 1'b1) begin
-    r_valid <= 1'b0;
-    l_valid <= 1'b0;
-    sample_r <= 18'h20000;
-    sample_l <= 18'h20000;
-    sound_r <= 18'h20000;
-    sound_l <= 18'h20000;
-  end
-  else begin
-    r_valid <= wavetable_r_valid;
-    l_valid <= wavetable_l_valid;
-    
-    if (r_valid == 1'b1) begin
-      sample_r <= mix_result;
-    end
-    else if (l_valid == 1'b1) begin
-      sample_l <= mix_result;
-    end
- 
-    if (tick48k == 1'b1) begin
-      sound_r <= sample_r;
-      sound_l <= sample_l;
-      sample_r <= 18'h20000;
-      sample_l <= 18'h20000;
-    end
- 
-  end
+  volume_adsr_q <= volume_adsr;
+  velocity_q <= velocity;
 end
 
-assign sample_latch = (r_valid== 1'b1) ? sample_r :
-                      (l_valid== 1'b1) ? sample_l :
-                      18'h20000;
+assign mul_result = volume_adsr_q * velocity_q;
+
+
+always @(posedge clk) begin
+  mul_result_reg <= mul_result[35:18];
+end
+
+assign addr = (ctrl_muxAddr == 1'b1) ? wavetable_l_q : wavetable_r_q;
+
+always @(posedge clk) begin
+  wavetable_l_q <= wavetable_l;
+  wavetable_r_q <= wavetable_r;
+end
+
+assign en = wavetable_r_valid | wavetable_l_valid | valid | valid_q;
 
 RAMB16_S18_wavetable wavetable (
     .clk(clk), 
@@ -96,14 +62,58 @@ RAMB16_S18_wavetable wavetable (
 dca apply_env (
     .clk(clk), 
     .sample(out_data), 
-    .envelope(mul_result[35:18]), 
+    .envelope(mul_result_reg), 
     .result(output_sample)
     );
 
+always @(posedge clk) begin
+  output_sample_reg <= output_sample;
+end
+
+assign mixerA = (ctrl_mixerA == 1'b1) ? 18'h20000 : output_sample_reg;
+assign mixerB = (ctrl_mixerB == 1'b1) ? sample_l : sample_r;
+
 mixer mixer0 (
-    .A(output_sample), 
-    .B(sample_latch), 
+    .clk(clk),
+    .A(mixerA), 
+    .B(mixerB), 
     .Z(mix_result)
     );
 
+always @(posedge clk) begin
+  if (rst == 1'b1) begin
+    sample_r <= 18'h20000;
+    sample_l <= 18'h20000;
+  end
+  else begin
+    if (valid_q5 == 1'b1) begin
+      sample_r <= mix_result;
+    end
+    else if (valid_q6 == 1'b1) begin
+      sample_l <= mix_result;
+    end
+    else if (tick48k == 1'b1) begin
+      sound_r <= sample_r;
+      sound_l <= sample_l;
+      sample_r <= 18'h20000;
+      sample_l <= 18'h20000;
+    end
+  end
+end
+
+
+always @(posedge clk) begin
+  valid <= wavetable_r_valid;
+  valid_q <= valid;
+  valid_q2 <= valid_q;
+  valid_q3 <= valid_q2;
+  valid_q4 <= valid_q3;
+  valid_q5 <= valid_q4;
+  valid_q6 <= valid_q5;
+end
+
+assign {ctrl_mixerA,ctrl_mixerB} = (valid_q3 == 1'b1 && valid_q4==1'b0) ? 2'b00 :
+                                   (valid_q3 == 1'b0 && valid_q4==1'b1) ? 2'b01 :
+                                                                          2'b11 ;
+assign ctrl_muxAddr = (valid_q == 1'b1) ? 1'b1 : 1'b0;
 endmodule
