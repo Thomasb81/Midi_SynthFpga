@@ -43,7 +43,7 @@ DCM0 clk_builder0 (
     );
 	 
 synth2 synth0 (
-    .clk32(clk32), 
+    .clk(clk32), 
     .rst(rst),
     .note_pressed(note_pressed), 
     .note_released(note_released),

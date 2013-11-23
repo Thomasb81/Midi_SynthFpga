@@ -1,5 +1,4 @@
 # Papilio User Constraints File
-
 # Main board wing pin [] to FPGA pin Pxx map
 # -------C-------    -------B-------    -------A-------
 # [GND] [C00] P91    [GND] [B00] P85    P86 [A15]
@@ -18,9 +17,7 @@
 #       [C13] P15          [B13] P32    P26 [A02] [3V3]
 #       [C14] P16          [B14] P25    P23 [A01] [2V5]
 #       [C15] P17          [B15] P22    P18 [A00] [GND]
-
 # Wing pin to FPGA pin map
-
 # Pin AH   BH   CH     VGA16  VGA8   Joystick   Audio   MicroSD  PS2     Button
 # 15  P86  P22  P17    R3     RED    UP         A1L     -        -       PB1
 # 14  P84  P25  P16    R2     GRN    DOWN       A1S     -        -       LED1
@@ -30,7 +27,6 @@
 # 10  P65  P41  P10    G2     BLU    SW1        A2L     SCK      CLK2    LED3
 # 09  P62  P54  P9     G1     HS     SW2        A2S     SO       DAT1    PB4
 # 08  P60  P58  P5     G0     VS     LED        A2R     D1       CLK1    LED4
-
 # Pin AL   BL   CL     VGA16   VGA8   Joystick   Audio   MicroSD  PS2     Button
 # 07  P57  P61  P4     B3     RED    UP         A1L     -        -       PB1
 # 06  P53  P63  P3     B2     GRN    DOWN       A1S     -        -       LED1
@@ -62,23 +58,13 @@
 ###########################################################
 
 CONFIG PART = XC3S500E-VQ100-4 ;
-#CONFIG PART = XC3S250E-VQ100-4 ;
-
-NET OSC_IN TNM_NET = clk_ref_grp;
-#TIMESPEC TS01 = PERIOD : clk_ref_grp : 31.25ns : PRIORITY 1;   # 32.00 MHz
-
-#TIMESPEC TS11 = FROM:PADS:TO:FFS : 30 ns;
-#TIMESPEC TS12 = FROM:FFS:TO:PADS : 30 ns;
-
-NET OSC_IN						LOC = "P89"  | IOSTANDARD = LVTTL; # 32.00 MHz oscillator
-
+NET OSC_IN						LOC = "P89"  |IOSTANDARD = LVTTL; # 32.00 MHz oscillator
 #NET JTAG_TMS					LOC = "P75"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ;
 #NET JTAG_TCK					LOC = "P77"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ;
 #NET JTAG_TDI					LOC = "P100" | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ;
 #NET JTAG_TDO					LOC = "P76"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ;
-
-NET USB_TX						LOC = "P88"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP;
-NET USB_RX						LOC = "P90"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ;
+NET USB_TX						LOC = "P88"  |IOSTANDARD = LVTTL |DRIVE = 8 |SLEW = FAST |PULLUP;
+NET USB_RX						LOC = "P90"  |IOSTANDARD = LVTTL |DRIVE = 8 |SLEW = FAST ;
 
 #NET FLASH_CS					LOC = "P24"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ;
 #NET FLASH_CK					LOC = "P50"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ;
@@ -101,12 +87,11 @@ NET USB_RX						LOC = "P90"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ;
 #NET Wing1_AL02				LOC = "P26"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
 #NET Wing1_AL01				LOC = "P23"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
 #NET LED								LOC = "P18"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ; # on wing AL
-
 #NET Wing1_BH15				LOC = "P22"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
-NET AUDIO_L					LOC = "P22"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ; # on wing BH
+NET AUDIO_L					LOC = "P22"  |IOSTANDARD = LVTTL |DRIVE = 8 |SLEW = FAST ; # on wing BH
 #NET Wing1_BH14				LOC = "P25"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
 #NET Wing1_BH13				LOC = "P32"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
-NET AUDIO_R					LOC = "P32"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ; # on wing BH
+NET AUDIO_R					LOC = "P32"  |IOSTANDARD = LVTTL |DRIVE = 8 |SLEW = FAST ; # on wing BH
 #NET Wing1_BH12				LOC = "P34"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
 #NET Wing1_BH11				LOC = "P36"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
 #NET Wing1_BH10				LOC = "P41"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
@@ -114,18 +99,17 @@ NET AUDIO_R					LOC = "P32"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ; # 
 #NET Wing1_BH08				LOC = "P58"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
 #NET Wing1_BL07				LOC = "P61"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
 #NET Wing1_BL06				LOC = "P63"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
-NET LED1				LOC = "P63"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST; #
+NET LED1				LOC = "P63"  |IOSTANDARD = LVTTL |DRIVE = 8 |SLEW = FAST; #
 #NET Wing1_BL05				LOC = "P66"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
 #NET Wing1_BL04				LOC = "P68"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
-NET LED2				LOC = "P68"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST; #
+NET LED2				LOC = "P68"  |IOSTANDARD = LVTTL |DRIVE = 8 |SLEW = FAST; #
 #NET Wing1_BL03				LOC = "P71"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
 NET NRESET				LOC = "P71"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
 #NET Wing1_BL02				LOC = "P78"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
-NET LED3				LOC = "P78"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST; #
+NET LED3				LOC = "P78"  |IOSTANDARD = LVTTL |DRIVE = 8 |SLEW = FAST; #
 #NET Wing1_BL01				LOC = "P83"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
 #NET Wing1_BL00				LOC = "P85"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
-NET LED4							LOC = "P85"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ; # on wing BL
-
+NET LED4							LOC = "P85"  |IOSTANDARD = LVTTL |DRIVE = 8 |SLEW = FAST ; # on wing BL
 #NET Wing2_CL00				LOC = "P91"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ; #
 #NET Wing2_CL01				LOC = "P92"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ; #
 #NET Wing2_CL02				LOC = "P94"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
@@ -142,3 +126,10 @@ NET LED4							LOC = "P85"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ; # o
 #NET Wing2_CH13				LOC = "P15"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
 #NET Wing2_CH14				LOC = "P16"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
 #NET Wing2_CH15				LOC = "P17"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
+#Created by Constraints Editor (xc3s500e-vq100-4) - 2013/11/19
+#Oscillator 32M
+NET "osc_in" TNM_NET = osc_in;
+TIMESPEC TS_osc_in = PERIOD "osc_in" 31.25 ns HIGH 50%;
+#Created by Constraints Editor (xc3s500e-vq100-4) - 2013/11/19
+#Clk 96M -10 ns
+PIN "clk_builder0/DCM_SP_INST.CLKFX" TNM = clk96M;

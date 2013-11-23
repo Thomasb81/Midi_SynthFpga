@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 module synth2(
-  input clk32,
+  input clk,
   input rst,
   input note_pressed,
   input note_released,
@@ -102,7 +102,7 @@ reg [4:0] pitchwhell_chan[0:15];
 
 // synthesis translate_on
 
-always @(posedge clk32) begin
+always @(posedge clk) begin
  if (rst == 1'b1) begin
      pitchwhell_chan[0] <= 5'b10000;
      pitchwhell_chan[1] <= 5'b10000;
@@ -153,7 +153,7 @@ adsr_state_ctrl_w,
 sustain_ctrl_w,
 5'b11111};
 
-always @(posedge clk32) begin
+always @(posedge clk) begin
  if (rst == 1'b1) begin
    channel_ctrl_w <= 4'h0;
    note_ctrl_w <= 7'h00;
@@ -193,13 +193,13 @@ always @(posedge clk32) begin
 end
 
 DP_ram DP_ram0 (
-  .clka(clk32), // input clka
+  .clka(clk), // input clka
   .rsta(rst), // input rsta
   .wea(we_ctrl), // input [0 : 0] wea
   .addra(addr_ctrl), // input [7 : 0] addra
   .dina(datain_ctrl), // input [71 : 0] dina
   .douta(dataout_ctrl), // output [71 : 0] douta
-  .clkb(clk32), // input clkb
+  .clkb(clk), // input clkb
   .rstb(rst), // input rstb
   .web(we_sample), // input [0 : 0] web
   .addrb(addr_sample[7:0]), // input [7 : 0] addrb
@@ -212,7 +212,7 @@ DP_ram DP_ram0 (
 assign note_calculated = {note_sample_r,3'b000} + {5'b00000,pitchwhell_chan[channel_sample_r]} -16;
 
 freqtable RAMB16_S18 (
-    .clk(clk32), 
+    .clk(clk), 
     .addr(note_calculated), 
     .en(1'b1), 
     .do(wave_advance)
@@ -261,8 +261,8 @@ adsr_mngt2 adsr_mngt2_0(
 .o_volume(volume_cal)
 );
 
-// count == 666 => 48Khz @ clk32 == 32Mhz
-always @(posedge clk32) begin
+// count == 666 => 48Khz @ clk == 32Mhz
+always @(posedge clk) begin
   if (rst == 1'b1) begin
     count <= 11'h000;
   end
@@ -275,7 +275,7 @@ always @(posedge clk32) begin
 end
 
 
-always @(posedge clk32) begin
+always @(posedge clk) begin
   if (rst == 1'b1) begin
     addr_sample <= 8'h00;
     we_sample <= 1'b0;
@@ -330,7 +330,7 @@ end
 assign wavetable_4left = wavetable_sample_r[18:9]+256;
 
 soundgen soundgen0 (
-    .clk(clk32), 
+    .clk(clk), 
     .rst(rst), 
     .wavetable_r(wavetable_sample_r[18:9]), 
     .wavetable_r_valid(sample_state == `SAMPLE_UPNOTE), 
@@ -344,14 +344,14 @@ soundgen soundgen0 (
     );
 
 dac16 inst_dac16_r (
-    .clk(clk32), 
+    .clk(clk), 
     .rst(rst), 
     .data(sound_r[17:2]), 
     .dac_out(audio_r)
     );
 
 dac16 inst_dac16_l (
-    .clk(clk32), 
+    .clk(clk), 
     .rst(rst), 
     .data(sound_l[17:2]), 
     .dac_out(audio_l)
