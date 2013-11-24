@@ -30,7 +30,7 @@ reg [17:0] sample_l;
 wire [17:0] mixerA, mixerB;
 wire ctrl_mixerA,ctrl_mixerB, ctrl_muxAddr;
 
-pipelined_multiplixer adsrxvelocity (
+pipelined_multiplier adsrxvelocity (
 .clk(clk),
 .a(volume_adsr),
 .b(velocity),

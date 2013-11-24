@@ -11,7 +11,7 @@ reg [21:0] addvalue_q2;
 reg [21:0] addvalue_q3;
 wire [30:0] calcul;
 
-pipelined_multiplixer AxB(
+pipelined_multiplier AxB(
 .clk(clk),
 .a(A),
 .b(B),
