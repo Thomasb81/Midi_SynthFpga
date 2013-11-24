@@ -262,12 +262,13 @@ adsr_mngt2 adsr_mngt2_0(
 );
 
 // count == 666 => 48Khz @ clk == 32Mhz
+// count == 2000 => 48Khz @ clk == 96Mhz
 always @(posedge clk) begin
   if (rst == 1'b1) begin
     count <= 11'h000;
   end
   else begin
-    if (count <= 11'd666)
+    if (count <= 11'd2000)
 	   count <= count +1;
 	 else
 	   count <= 11'h000;
@@ -316,7 +317,7 @@ always @(posedge clk) begin
           sample_state <= `SAMPLE_NEWADDR;
         end
       end
-      else if (count == 11'd666) begin
+      else if (count == 11'd2000) begin
         sample_state <= `SAMPLE_NEWADDR;
         addr_sample <= 8'h00;
       end
@@ -338,7 +339,7 @@ soundgen soundgen0 (
     .wavetable_l_valid(sample_state == `SAMPLE_READ), 
     .volume_adsr(volume_sample_r), 
     .velocity({1'b0,velocity_sample_r,10'b0000000000}),
-    .tick48k(count==11'd666), 
+    .tick48k(count==11'd2000), 
     .sound_r(sound_r), 
     .sound_l(sound_l)
     );

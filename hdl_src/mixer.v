@@ -5,25 +5,26 @@ module mixer(
     output [17:0] Z
     );
 
-wire [21:0] addvalue;
+wire [18:0] mult_result;
 reg [21:0] addvalue_q;
-reg [35:17] mult_q;
-wire [35:0] mult;
-reg [17:0] A_q, B_q;
+reg [21:0] addvalue_q2;
+reg [21:0] addvalue_q3;
+wire [30:0] calcul;
 
+pipelined_multiplixer AxB(
+.clk(clk),
+.a(A),
+.b(B),
+.p(mult_result)
+);
 
-always @(posedge clk)begin
-  addvalue_q<= addvalue;
-  mult_q <= mult[35:17];
-  A_q <= A;
-  B_q <= B;
+always @(posedge clk) begin
+  addvalue_q <= (A<<1) + (B<<1);
+  addvalue_q2 <= addvalue_q;
+  addvalue_q3 <= addvalue_q2;
 end
 
-
-assign addvalue = ((A_q << 1) + (B_q << 1) ); 
-assign mult = A_q*B_q;
-wire [30:0] calcul = addvalue_q - mult_q - (1<<18);
+assign calcul = addvalue_q3 - mult_result - (1<<18);
 assign Z = calcul[17:0];
-
 
 endmodule

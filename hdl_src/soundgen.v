@@ -15,33 +15,28 @@ module soundgen(
 
 wire [9:0] addr;
 wire [17:0] out_data;
+reg [17:0] out_data_q;
 wire [17:0] output_sample;
 reg [17:0] output_sample_reg;
 wire [17:0] mix_result;
 wire en;
-wire [35:0] mul_result;
-reg [17:0] mul_result_reg;
-reg [17:0] volume_adsr_q,velocity_q; 
+wire [18:0] mul_result2;
 reg [9:0] wavetable_r_q, wavetable_l_q;
 
-reg valid, valid_q, valid_q2, valid_q3, valid_q4, valid_q5, valid_q6;
+reg valid, valid_q, valid_q2, valid_q3, valid_q4, valid_q5, valid_q6,valid_q7,valid_q8;
 reg [17:0] sample_r;
 reg [17:0] sample_l;
 
 wire [17:0] mixerA, mixerB;
 wire ctrl_mixerA,ctrl_mixerB, ctrl_muxAddr;
 
-always @(posedge clk) begin
-  volume_adsr_q <= volume_adsr;
-  velocity_q <= velocity;
-end
+pipelined_multiplixer adsrxvelocity (
+.clk(clk),
+.a(volume_adsr),
+.b(velocity),
+.p(mul_result2)
+);
 
-assign mul_result = volume_adsr_q * velocity_q;
-
-
-always @(posedge clk) begin
-  mul_result_reg <= mul_result[35:18];
-end
 
 assign addr = (ctrl_muxAddr == 1'b1) ? wavetable_l_q : wavetable_r_q;
 
@@ -59,10 +54,14 @@ RAMB16_S18_wavetable wavetable (
     .do(out_data)
     );
 
+always @(posedge clk) begin
+  out_data_q <= out_data;
+end
+
 dca apply_env (
     .clk(clk), 
-    .sample(out_data), 
-    .envelope(mul_result_reg), 
+    .sample(out_data_q), 
+    .envelope(mul_result2[18:1]), 
     .result(output_sample)
     );
 
@@ -86,10 +85,10 @@ always @(posedge clk) begin
     sample_l <= 18'h20000;
   end
   else begin
-    if (valid_q5 == 1'b1) begin
+    if (valid_q7 == 1'b1) begin
       sample_r <= mix_result;
     end
-    else if (valid_q6 == 1'b1) begin
+    else if (valid_q8 == 1'b1) begin
       sample_l <= mix_result;
     end
     else if (tick48k == 1'b1) begin
@@ -110,10 +109,12 @@ always @(posedge clk) begin
   valid_q4 <= valid_q3;
   valid_q5 <= valid_q4;
   valid_q6 <= valid_q5;
+  valid_q7 <= valid_q6;
+  valid_q8 <= valid_q7;
 end
 
-assign {ctrl_mixerA,ctrl_mixerB} = (valid_q3 == 1'b1 && valid_q4==1'b0) ? 2'b00 :
-                                   (valid_q3 == 1'b0 && valid_q4==1'b1) ? 2'b01 :
+assign {ctrl_mixerA,ctrl_mixerB} = (valid_q4 == 1'b1 && valid_q5==1'b0) ? 2'b00 :
+                                   (valid_q4 == 1'b0 && valid_q5==1'b1) ? 2'b01 :
                                                                           2'b11 ;
 assign ctrl_muxAddr = (valid_q == 1'b1) ? 1'b1 : 1'b0;
 endmodule
