@@ -20,10 +20,9 @@ architecture behavior of testbench is
 	component Synth_top
 	port(
 		osc_in  : in  std_logic;
-		nreset : in std_logic;
 		usb_rx : out std_logic;
-      usb_tx : in std_logic;
-      audio_l : out std_logic;		
+                usb_tx : in std_logic;
+                audio_l : out std_logic;		
 		audio_r : out std_logic;
 		led4     : out std_logic;
 		led3     : out std_logic;
@@ -55,7 +54,6 @@ begin
 	-- Instantiate the Unit Under Test (UUT)
 	uut: Synth_top port map (
 		osc_in 	=> clock,
-		nreset => nreset,
 		usb_tx => usb_rxd,
 		usb_rx => usb_txd,
 		audio_l => audio_l,
