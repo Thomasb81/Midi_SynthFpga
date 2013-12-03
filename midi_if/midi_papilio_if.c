@@ -22,7 +22,7 @@ serialib ttyusb1;
 
 stats db;
 tune db_tune;
-
+uint8_t read_buff[256];
 
 void printf_m(char * buf) {
 //  fprintf(stdout,"## begin ##\n");
@@ -63,6 +63,18 @@ void midi_action(snd_seq_t *seq_handle) {
 
   do {
     snd_seq_event_input(seq_handle, &ev);
+    switch (ev->flags & SND_SEQ_TIME_STAMP_MASK) {
+	case SND_SEQ_TIME_STAMP_TICK:
+		FPRINTF_MIDI_EVENT(", time = %d ticks ",
+		       ev->time.tick);
+		break;
+	case SND_SEQ_TIME_STAMP_REAL:
+		FPRINTF_MIDI_EVENT(", time = %d.%09d ",
+		       (int)ev->time.time.tv_sec,
+		       (int)ev->time.time.tv_nsec);
+		break;
+	}
+
     switch (ev->type) {
       case SND_SEQ_EVENT_SYSTEM:
         FPRINTF_MIDI_EVENT("System event on Channel %2d: 0x%8x\n", ev->data.control.channel, ev->data.result.event);
@@ -83,7 +95,10 @@ void midi_action(snd_seq_t *seq_handle) {
                 ev->data.note.note, ev->data.note.velocity, 
                 ev->data.note.off_velocity, ev->data.note.duration);
         
-        db_tune.note_on(ev->data.control.channel,ev->data.note.note,ev->data.note.velocity);
+        db_tune.note_on(ev->data.control.channel,ev->data.note.note,ev->data.note.velocity,
+                       ev->time.tick,
+                       ev->data.note.duration
+                       );
         db.note_on( ev->data.control.channel,ev->data.note.note);
 
         break;        
@@ -93,7 +108,7 @@ void midi_action(snd_seq_t *seq_handle) {
                 ev->data.note.note, ev->data.note.velocity, 
                 ev->data.note.off_velocity, ev->data.note.duration);
         
-        db_tune.note_off(ev->data.control.channel,ev->data.note.note,ev->data.note.velocity);
+        db_tune.note_off(ev->data.control.channel,ev->data.note.note,ev->data.note.velocity,ev->time.tick);
         db.note_off( ev->data.control.channel,ev->data.note.note);
         break;        
       case SND_SEQ_EVENT_KEYPRESS:
@@ -248,6 +263,7 @@ void midi_action(snd_seq_t *seq_handle) {
                         i,db.note_channel_max[i]);
 	}
         fprintf(stdout,"Max number of note all channel, in the same time : %i\n",db.all_channel);
+        db_tune.check_for_note_on();
         
 	break;
       case SND_SEQ_EVENT_USR0 :
@@ -332,19 +348,30 @@ int main(int argc, char *argv[]) {
 
   snd_seq_t *seq_handle;
   int npfd;
+  int serial_fd = 1;
   struct pollfd *pfd;
 
   seq_handle = open_seq();
   npfd = snd_seq_poll_descriptors_count(seq_handle, POLLIN);
-  pfd = (struct pollfd *)alloca(npfd * sizeof(struct pollfd));
+  pfd = (struct pollfd *)alloca((npfd+serial_fd) * sizeof(struct pollfd));
   snd_seq_poll_descriptors(seq_handle, pfd, npfd, POLLIN);
   
+  ttyusb1.Open("/dev/ttyUSB1",3000000);
+  pfd[npfd].fd = ttyusb1.return_filedes();
+  pfd[npfd].events = POLLIN;
 
-      ttyusb1.Open("/dev/ttyUSB1",3000000);
-   
+  db_tune.set_filter(0x6,0x47);   
 
   while (1) {
-    if (poll(pfd, npfd, 100000) > 0) {
+    if (poll(pfd, (npfd+serial_fd), 100000) > 0) {
+      if (pfd[npfd].revents & POLLIN ) {
+        uint16_t read_return = read(pfd[npfd].fd,read_buff,256);
+        if (read_return > 0) {
+          for (uint16_t i=0; i < read_return; i++) {
+            db_tune.remove(read_buff[i]);
+          }
+        }
+      }
       midi_action(seq_handle);
     }  
   }

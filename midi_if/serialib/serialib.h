@@ -95,7 +95,7 @@ public:
     int     ReadString  (   char *String,
                             char FinalChar,
                             unsigned int MaxNbBytes,
-                            const unsigned int TimeOut_ms=NULL);
+                            const unsigned int TimeOut_ms=0);
 
 
 
@@ -107,7 +107,7 @@ public:
     char    Write       (const void *Buffer, const unsigned int NbBytes);
 
     // Read an array of byte (with timeout)
-    int     Read        (void *Buffer,unsigned int MaxNbBytes,const unsigned int TimeOut_ms=NULL);
+    int     Read        (void *Buffer,unsigned int MaxNbBytes,const unsigned int TimeOut_ms=0);
 
 
     // _________________________
@@ -119,6 +119,10 @@ public:
 
     // Return the number of bytes in the received buffer
     int     Peek();
+#ifdef __linux__
+    //Return the file descriptor
+    int     return_filedes();
+#endif
 
 private:
     // Read a string (no timeout)

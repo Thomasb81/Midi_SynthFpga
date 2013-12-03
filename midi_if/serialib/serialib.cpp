@@ -528,3 +528,8 @@ unsigned long int TimeOut::ElapsedTime_ms()
     return sec*1000+usec/1000;
 }
 
+#ifdef __linux__    
+int serialib::return_filedes() {
+  return fd;
+}
+#endif

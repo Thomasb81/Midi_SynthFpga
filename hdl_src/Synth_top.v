@@ -23,7 +23,8 @@ wire note_released;
 wire note_keypress;
 wire pitch_wheel;
 wire [3:0] channel;
-wire read;
+wire [7:0] read_data;
+wire read_data_valid;
 wire [7:0] data_w_resync;
 wire [7:0] addr;
 
@@ -50,7 +51,9 @@ synth2 synth0 (
     .channel(channel),
     .addr(addr),	 
     .audio_r(audio_r),
-    .audio_l(audio_l)
+    .audio_l(audio_l),
+    .data(read_data),
+    .data_valid(read_data_valid)
 
 );
 
@@ -62,11 +65,15 @@ uart_ss uart_ss0 (
     .clk96(clk96m), 
     .usb_rx(usb_tx),
     .usb_tx(usb_rx),	 
-    .data(data),
-    .valid_data(valid_data),
-    .write_data(1'b0),
-    .di(8'h00)
+    .data_out(data),
+    .valid_data_out(valid_data),
+    .valid_data_in(read_data_valid),
+    .data_in(read_data)
+
+
 );
+
+
 
 /*
 assign led1 = data[0] | data[1];
@@ -74,6 +81,7 @@ assign led2 = data[2] | data[3];
 assign led3 = data[4] | data[5];
 assign led4 = data[6] | data[7];
 */
+
 
 always @(posedge clk96m) begin
   if (pitch_wheel == 1'b1) begin

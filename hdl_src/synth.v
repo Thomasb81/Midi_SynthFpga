@@ -11,7 +11,11 @@ module synth2(
   input [3:0] channel,
   input [7:0] addr,
   output audio_r, 
-  output audio_l
+  output audio_l,
+
+  output [7:0] data,
+  output reg data_valid
+
 );
 
 `define MAX_SND_MEM 8'd255
@@ -98,6 +102,7 @@ wire[9:0] note_calculated;
 reg [9:0] pitchwhell_reg;
 reg [4:0] pitchwhell_chan[0:15];
 
+
 // synthesis translate_off
 
 // for debugging
@@ -168,18 +173,20 @@ always @(posedge clk) begin
    wavetable_ctrl_w <= 19'h00000;
  end
  else begin
+   addr_ctrl <= addr;
    if (note_pressed == 1'b1 || note_released == 1'b1 || note_keypress == 1'b1) begin
-     addr_ctrl <= addr;
      we_ctrl <= 1'b1;
      note_press_ctrl_w <= note_pressed;
      note_release_ctrl_w <= note_released;
      velocity_ctrl_w <= velocity;
+
      if (note_pressed == 1'b1) begin
        note_ctrl_w <= note;
        channel_ctrl_w <= channel;
        volume_ctrl_w <= 18'h00000;
        adsr_state_ctrl_w <= `BLANK; 
      end
+
      else begin // note_released | note_keypress
        note_ctrl_w <= note;
        channel_ctrl_w <= channel;
@@ -282,6 +289,7 @@ always @(posedge clk) begin
   end
 end
 
+assign data = addr_sample;
 
 always @(posedge clk) begin
   if (rst == 1'b1) begin
@@ -294,9 +302,11 @@ always @(posedge clk) begin
     adsr_state_sample_w <= 1'b0;
     volume_sample_w <= 18'h00000;
     sustain_sample_w <= 7'b0000000;
+    data_valid <= 1'b0;
   end
   else begin
     we_sample <=1'b0;
+    data_valid <= 1'b0;
     case (sample_state)
      `SAMPLE_START : begin
        sample_state <= `SAMPLE_NOTE_RESOL;
@@ -318,6 +328,9 @@ always @(posedge clk) begin
        note_pressed_sample_w <= note_pressed_cal;
        note_released_sample_w <= note_released_cal;
        volume_sample_w <= volume_cal;
+       if (adsr_state == `BLANK && adsr_state_sample_r != `BLANK) begin
+         data_valid <= 1'b1;
+       end
     end
     `SAMPLE_WRITE : begin
       if (count < 5* `MAX_SND_MEM) begin
