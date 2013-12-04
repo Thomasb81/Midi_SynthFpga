@@ -34,31 +34,37 @@ always @(posedge clk) begin
     rst_cmd <= 1'b0;
     pitch_wheel <= 1'b0;
   end
-  else
+  else begin
     case (state)
-     3'b000: // generic start state byte 0
+     3'b000: begin // generic start state byte 0
        if (valid_byte == 1'b1 && data[7] == 1'b1) begin // byte0[7] == 1 == midi cmd
           state <= 4'b0001;
           cmd <= data[6:4];
           channel <= data[3:0];
           valid <= data[7];
-          if (data == 8'd255)
+          if (data == 8'd255) begin
             rst_cmd <= 1'b1;
-            state <= 4'b0001;
           end
-     3'b001: // state 1 receive byte 1  
+        end
+     end
+     3'b001: begin // state 1 receive byte 1  
        if (valid_byte == 1'b1) begin
           state <= 3'b010;
-          note <= data[6:0];
+          //note <= data[6:0];
+          addr <= data[7:0];
         end
-     3'b010: // state 2 received midi byte 2
+     end
+     3'b010: begin// state 2 received midi byte 2
        if (valid_byte == 1'b1) begin
           state <= 3'b011;
-          velocity <= data[6:0];
-        end  
-     3'b011: // state 3 received byte 3
+          //velocity <= data[6:0];
+          note <= data[6:0];
+       end
+     end
+     3'b011: begin// state 3 received byte 3
         if (valid_byte == 1'b1) begin
-          addr <= data;
+          //addr <= data;
+          velocity <= data[6:0];
           if (cmd == 3'b001 && valid == 1'b1) // cmd is note press
             note_presse <= 1'b1;
           else if (cmd == 3'b000 && valid == 1'b1) //cmd is note released
@@ -69,6 +75,7 @@ always @(posedge clk) begin
             pitch_wheel <= 1'b1;
           state <= 4'b100;
         end
+     end
      3'b100: // reset state
        begin
           valid <= 1'b0;
@@ -79,6 +86,7 @@ always @(posedge clk) begin
           pitch_wheel <= 1'b0;
        end
      endcase
+  end
 end
 
 

@@ -19,10 +19,14 @@ module synth2(
   input [3:0] channel,
   input [7:0] addr,
   output audio_r, 
-  output audio_l
+  output audio_l,
+
+  output [7:0] data,
+  output reg data_valid
+
 );
 
-`define MAX_SND_MEM 8'd128
+`define MAX_SND_MEM 8'd255
 
 `define ATTACK 3'd1
 `define DECAY 3'd2
@@ -30,10 +34,11 @@ module synth2(
 `define RELEASE 3'd4
 `define BLANK 3'd0
 
-`define SAMPLE_NEWADDR 2'd0
-`define SAMPLE_UPNOTE 2'd1
-`define SAMPLE_READ 2'd2
-`define SAMPLE_WRITE 2'd3
+`define SAMPLE_START 3'd0
+`define SAMPLE_NOTE_RESOL 3'd1
+`define SAMPLE_ADDR_MEM 3'd2
+`define SAMPLE_READ 3'd3
+`define SAMPLE_WRITE 3'd4
 
 reg [7:0] addr_ctrl;
 reg [7:0] store_addr_ctrl;
@@ -90,7 +95,7 @@ wire note_pressed_cal;
 wire note_released_cal;
 wire [17:0] volume_cal;
 
-reg [1:0] sample_state;
+reg [2:0] sample_state;
 reg [2:0] ctrl_state;
 
 wire [9:0] wavetable_4left;
@@ -102,7 +107,9 @@ wire [17:0] sound_r;
 wire [17:0] sound_l;
 
 wire[9:0] note_calculated;
+reg [9:0] pitchwhell_reg;
 reg [4:0] pitchwhell_chan[0:15];
+
 
 // synthesis translate_off
 
@@ -174,18 +181,20 @@ always @(posedge clk96) begin
    wavetable_ctrl_w <= 19'h00000;
  end
  else begin
+   addr_ctrl <= addr;
    if (note_pressed == 1'b1 || note_released == 1'b1 || note_keypress == 1'b1) begin
-     addr_ctrl <= addr;
      we_ctrl <= 1'b1;
      note_press_ctrl_w <= note_pressed;
      note_release_ctrl_w <= note_released;
      velocity_ctrl_w <= velocity;
+
      if (note_pressed == 1'b1) begin
        note_ctrl_w <= note;
        channel_ctrl_w <= channel;
        volume_ctrl_w <= 18'h00000;
        adsr_state_ctrl_w <= `BLANK; 
      end
+
      else begin // note_released | note_keypress
        note_ctrl_w <= note;
        channel_ctrl_w <= channel;
@@ -217,7 +226,12 @@ DP_ram DP_ram0 (
   .enb(1'b1)
 );
 
-assign note_calculated = {note_sample_r,3'b000} + {5'b00000,pitchwhell_chan[channel_sample_r]} -16;
+always @(posedge clk96) begin
+  pitchwhell_reg <=  {5'b00000,pitchwhell_chan[channel_sample_r]};
+end
+
+//assign note_calculated = {note_sample_r,3'b000} + {5'b00000,pitchwhell_chan[channel_sample_r]} -16;
+assign note_calculated = {note_sample_r,3'b000} + pitchwhell_reg -16;
 
 freqtable RAMB16_S18 (
     .clk(clk96), 
@@ -276,57 +290,65 @@ always @(posedge clk96) begin
     count <= 11'h000;
   end
   else begin
-    if (count <= 11'd2000)
-	   count <= count +1;
-	 else
-	   count <= 11'h000;
+    if (count == 11'd1999)
+      count <= 11'h000;
+    else
+      count <= count +1;
   end
 end
 
+assign data = addr_sample;
 
 always @(posedge clk96) begin
   if (rst == 1'b1) begin
     addr_sample <= 8'h00;
     we_sample <= 1'b0;
-    sample_state <= `SAMPLE_NEWADDR;
+    sample_state <= `SAMPLE_START;
     wavetable_sample_w <= 19'h00000;
     note_released_sample_w <= 1'b0;
     note_pressed_sample_w <= 1'b0;
     adsr_state_sample_w <= 1'b0;
     volume_sample_w <= 18'h00000;
     sustain_sample_w <= 7'b0000000;
+    data_valid <= 1'b0;
   end
   else begin
+    we_sample <=1'b0;
+    data_valid <= 1'b0;
     case (sample_state)
-     `SAMPLE_NEWADDR : begin
-       sample_state<= `SAMPLE_UPNOTE;
+     `SAMPLE_START : begin
+       sample_state <= `SAMPLE_NOTE_RESOL;
      end
-     `SAMPLE_UPNOTE : begin
+     `SAMPLE_NOTE_RESOL : begin
+       sample_state <= `SAMPLE_ADDR_MEM;
+     end
+     `SAMPLE_ADDR_MEM : begin
        sample_state <= `SAMPLE_READ;
        //Next cycle wave_advance will get the correct value
      end
      `SAMPLE_READ : begin
        sample_state <= `SAMPLE_WRITE;
-       if (addr_sample <= `MAX_SND_MEM)
+       if (addr_sample <= `MAX_SND_MEM) begin
          we_sample <= 1'b1;
-       else
-         we_sample <= 1'b0;
+       end
        wavetable_sample_w <= wavetable_sample_r + wave_advance;
        adsr_state_sample_w <= adsr_state;
        note_pressed_sample_w <= note_pressed_cal;
        note_released_sample_w <= note_released_cal;
        volume_sample_w <= volume_cal;
+       if (adsr_state == `BLANK && adsr_state_sample_r != `BLANK) begin
+         data_valid <= 1'b1;
+       end
     end
     `SAMPLE_WRITE : begin
-      we_sample <=1'b0;
-      if (count < 4* `MAX_SND_MEM) begin
+      if (count < 5* `MAX_SND_MEM) begin
         if (addr_sample < `MAX_SND_MEM) begin
           addr_sample <= addr_sample + 1;
-          sample_state <= `SAMPLE_NEWADDR;
+          sample_state <= `SAMPLE_START;
         end
       end
-      else if (count == 11'd2000) begin
-        sample_state <= `SAMPLE_NEWADDR;
+      else if (count == 11'd1999) begin
+        sample_state <= `SAMPLE_START;
         addr_sample <= 8'h00;
       end
       else
@@ -342,12 +364,12 @@ soundgen soundgen0 (
     .clk(clk96), 
     .rst(rst), 
     .wavetable_r(wavetable_sample_r[18:9]), 
-    .wavetable_r_valid(sample_state == `SAMPLE_UPNOTE), 
+    .wavetable_r_valid(sample_state == `SAMPLE_ADDR_MEM), 
     .wavetable_l(wavetable_4left), 
     .wavetable_l_valid(sample_state == `SAMPLE_READ), 
     .volume_adsr(volume_sample_r), 
     .velocity({1'b0,velocity_sample_r,10'b0000000000}),
-    .tick48k(count==11'd2000), 
+    .tick48k(count==11'd1999), 
     .sound_r(sound_r), 
     .sound_l(sound_l)
     );
@@ -365,7 +387,6 @@ dac16 inst_dac16_l (
     .data(sound_l[17:2]), 
     .dac_out(audio_l)
     );
-
 
 
 SDFeed SD_ss0(
@@ -387,12 +408,9 @@ SDFeed SD_ss0(
 
 );
 
-
-
-
-
-
-
+initial begin
+  sample_state <= `SAMPLE_START;
+end
 
 // synthesis translate_off
 

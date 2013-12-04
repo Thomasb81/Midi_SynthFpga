@@ -12,14 +12,14 @@ use IEEE.NUMERIC_STD.ALL;
 library UNISIM;
 use UNISIM.VComponents.all;
 
-entity dca is
+entity dca_bhv is
     Port ( clk      : in  STD_LOGIC;
            sample   : in  STD_LOGIC_VECTOR (17 downto 0);
            envelope : in  STD_LOGIC_VECTOR (17 downto 0);
            result   : out  STD_LOGIC_VECTOR (17 downto 0));
-end dca;
+end dca_bhv;
 
-architecture Behavioral of dca is
+architecture Behavioral of dca_bhv is
    signal a   : std_logic_vector(17 downto 0) := (others => '0');
    signal p   : std_logic_vector(17 downto 0) := (others => '0');
    signal p2  : std_logic_vector(35 downto 0) := (others => '0');

@@ -25,9 +25,7 @@ output cs;
 wire clk96m;
 wire clk32;
 wire [7:0] data;
-wire [7:0] data_resync;
 wire valid_data;
-wire valid_data_resync;
 
 wire [6:0] note;
 wire [6:0] velocity;
@@ -36,9 +34,9 @@ wire note_released;
 wire note_keypress;
 wire pitch_wheel;
 wire [3:0] channel;
-wire read;
-wire read_resync;
-wire [7:0] data_w, data_w_resync;
+wire [7:0] read_data;
+wire read_data_valid;
+wire [7:0] data_w_resync;
 wire [7:0] addr;
 
 wire rst;
@@ -70,7 +68,9 @@ synth2 synth0 (
     .channel(channel),
     .addr(addr),	 
     .audio_r(audio_r),
-    .audio_l(audio_l)
+    .audio_l(audio_l),
+    .data(read_data),
+    .data_valid(read_data_valid)
 
 );
 
@@ -82,11 +82,15 @@ uart_ss uart_ss0 (
     .clk96(clk96m), 
     .usb_rx(usb_tx),
     .usb_tx(usb_rx),	 
-    .data(data),
-    .valid_data(valid_data),
-    .write_data(read_resync),
-    .di(data_w_resync)
+    .data_out(data),
+    .valid_data_out(valid_data),
+    .valid_data_in(read_data_valid),
+    .data_in(read_data)
+
+
 );
+
+
 
 /*
 assign led1 = data[0] | data[1];
