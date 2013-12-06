@@ -36,7 +36,6 @@ wire pitch_wheel;
 wire [3:0] channel;
 wire [7:0] read_data;
 wire read_data_valid;
-wire [7:0] data_w_resync;
 wire [7:0] addr;
 
 wire rst;
@@ -73,9 +72,6 @@ synth2 synth0 (
     .data_valid(read_data_valid)
 
 );
-
-assign read = 1'b0;
-assign data_w = 8'h00;
 
 uart_ss uart_ss0 (
     .rst(rst),

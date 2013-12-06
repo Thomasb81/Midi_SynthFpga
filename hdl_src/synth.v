@@ -27,6 +27,8 @@ module synth2(
 );
 
 `define MAX_SND_MEM 8'd255
+`define DRUM_CHANNEL 4'd9
+
 
 `define ATTACK 3'd1
 `define DECAY 3'd2
@@ -96,7 +98,6 @@ wire note_released_cal;
 wire [17:0] volume_cal;
 
 reg [2:0] sample_state;
-reg [2:0] ctrl_state;
 
 wire [9:0] wavetable_4left;
 
@@ -109,6 +110,9 @@ wire [17:0] sound_l;
 wire[9:0] note_calculated;
 reg [9:0] pitchwhell_reg;
 reg [4:0] pitchwhell_chan[0:15];
+
+wire wavetable_left_valid;
+wire wavetable_right_valid;
 
 
 // synthesis translate_off
@@ -227,7 +231,12 @@ DP_ram DP_ram0 (
 );
 
 always @(posedge clk96) begin
-  pitchwhell_reg <=  {5'b00000,pitchwhell_chan[channel_sample_r]};
+  if (rst == 1'b1) begin
+    pitchwhell_reg <= {5'b00000,5'b10000}; 
+  end
+  else begin
+    pitchwhell_reg <=  {5'b00000,pitchwhell_chan[channel_sample_r]};
+  end
 end
 
 //assign note_calculated = {note_sample_r,3'b000} + {5'b00000,pitchwhell_chan[channel_sample_r]} -16;
@@ -360,13 +369,17 @@ end
 
 assign wavetable_4left = wavetable_sample_r[18:9]+256;
 
+assign wavetable_right_valid = (sample_state == `SAMPLE_ADDR_MEM) && channel_sample_r != `DRUM_CHANNEL;
+assign wavetable_left_valid =  (sample_state == `SAMPLE_READ) && channel_sample_r != `DRUM_CHANNEL;
+
+
 soundgen soundgen0 (
     .clk(clk96), 
     .rst(rst), 
     .wavetable_r(wavetable_sample_r[18:9]), 
-    .wavetable_r_valid(sample_state == `SAMPLE_ADDR_MEM), 
+    .wavetable_r_valid(wavetable_right_valid), 
     .wavetable_l(wavetable_4left), 
-    .wavetable_l_valid(sample_state == `SAMPLE_READ), 
+    .wavetable_l_valid(wavetable_left_valid),
     .volume_adsr(volume_sample_r), 
     .velocity({1'b0,velocity_sample_r,10'b0000000000}),
     .tick48k(count==11'd1999), 
@@ -398,7 +411,7 @@ SDFeed SD_ss0(
 .miso(miso),
 .cs(cs),
 
-.id(8'h00),
+.id(7'h00),
 .note_on(note_on),
 .note_off(note_off),
 .completed(),
@@ -410,6 +423,7 @@ SDFeed SD_ss0(
 
 initial begin
   sample_state <= `SAMPLE_START;
+  pitchwhell_reg <= 10'b0000010000;
 end
 
 // synthesis translate_off
