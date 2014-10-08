@@ -22,8 +22,10 @@ module synth2(
   output audio_l,
 
   output [7:0] data,
-  output reg data_valid
+  output reg data_valid,
 
+  output [2:0] SDdriver_state,
+  output fifo_empty
 );
 
 `define MAX_SND_MEM 8'd255
@@ -114,6 +116,9 @@ reg [4:0] pitchwhell_chan[0:15];
 wire wavetable_left_valid;
 wire wavetable_right_valid;
 
+//drum
+wire drum0_valid;
+wire [15:0] drum0_sample;
 
 // synthesis translate_off
 
@@ -256,12 +261,12 @@ wavetable_sample_r,
 volume_sample_r,
 note_sample_r,
 channel_sample_r,
-velocity_sample_r,
-note_pressed_sample_r,
-note_released_sample_r,
-adsr_state_sample_r,
-sustain_sample_r,
-dummy_5bits_sample
+velocity_sample_r, // 7 + 17 = 24
+note_pressed_sample_r, // 1+16 = 17
+note_released_sample_r, // 1+ 15 = 16
+adsr_state_sample_r,// 3 + 12 = 15
+sustain_sample_r,  // 5+7 = 12
+dummy_5bits_sample // 5
 } = dataout_sample;
 
 assign datain_sample = {
@@ -371,6 +376,7 @@ assign wavetable_4left = wavetable_sample_r[18:9]+256;
 
 assign wavetable_right_valid = (sample_state == `SAMPLE_ADDR_MEM) && channel_sample_r != `DRUM_CHANNEL;
 assign wavetable_left_valid =  (sample_state == `SAMPLE_READ) && channel_sample_r != `DRUM_CHANNEL;
+assign drum0_valid = count == 11'd1290 || count == 11'd1291 ||count == 11'd1292 ||count == 11'd1292; 
 
 
 soundgen soundgen0 (
@@ -384,7 +390,10 @@ soundgen soundgen0 (
     .velocity({1'b0,velocity_sample_r,10'b0000000000}),
     .tick48k(count==11'd1999), 
     .sound_r(sound_r), 
-    .sound_l(sound_l)
+    .sound_l(sound_l),
+    //drum
+    .drum_sample0(drum0_sample),
+    .drum_sample0_valid(drum0_valid)
     );
 
 dac16 inst_dac16_r (
@@ -411,14 +420,20 @@ SDFeed SD_ss0(
 .miso(miso),
 .cs(cs),
 
-.id(7'h00),
-.note_on(note_on),
-.note_off(note_off),
+.id({1'b0,note_sample_r}),
+//.id(8'h01),
+.note_on(note_pressed_sample_r && channel_sample_r == `DRUM_CHANNEL ),
+.note_off(note_released_sample_r && channel_sample_r == `DRUM_CHANNEL),
+//.note_off(1'b0),
+//.note_off(1'b0),
 .completed(),
 
-.rd_en(1'b0),
-.data_out()
-
+.rd_en(count == 11'd1298),
+.data_out(drum0_sample),
+.fifo_full(),
+.fifo_empty(fifo_empty),
+.fifo_halffull(),
+.SDdriver_state(SDdriver_state)
 );
 
 initial begin

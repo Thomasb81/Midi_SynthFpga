@@ -13,8 +13,11 @@
 #include "tune.h"
 
 
-#define FPRINTF_MIDI_EVENT(...) fprintf(stdout,__VA_ARGS__)
-//#define FPRINTF_MIDI_EVENT(...) 
+
+
+
+//#define FPRINTF_MIDI_EVENT(...) fprintf(stdout,__VA_ARGS__)
+#define FPRINTF_MIDI_EVENT(...) 
 
 
 serialib ttyusb1;
@@ -100,7 +103,12 @@ void midi_action(snd_seq_t *seq_handle) {
                        ev->data.note.duration
                        );
         db.note_on( ev->data.control.channel,ev->data.note.note);
-
+        if (ev->data.control.channel == 9) {
+          printf( "note on event on Channel %2d: note channel %2d, note %2d, velocity %2d, off_velocity %2d, duration %d\n",
+                ev->data.control.channel, ev->data.note.channel,
+                ev->data.note.note, ev->data.note.velocity, 
+                ev->data.note.off_velocity, ev->data.note.duration);
+        }
         break;        
       case SND_SEQ_EVENT_NOTEOFF: 
         FPRINTF_MIDI_EVENT( "note off event on Channel %2d: note channel %2d, note %2d, velocity %2d, off_velocity %2d, duration %d\n",
@@ -110,6 +118,12 @@ void midi_action(snd_seq_t *seq_handle) {
         
         db_tune.note_off(ev->data.control.channel,ev->data.note.note,ev->data.note.velocity,ev->time.tick);
         db.note_off( ev->data.control.channel,ev->data.note.note);
+        if (ev->data.control.channel == 9) {
+          printf( "note off event on Channel %2d: note channel %2d, note %2d, velocity %2d, off_velocity %2d, duration %d\n",
+                ev->data.control.channel, ev->data.note.channel,
+                ev->data.note.note, ev->data.note.velocity, 
+                ev->data.note.off_velocity, ev->data.note.duration);
+        }
         break;        
       case SND_SEQ_EVENT_KEYPRESS:
         FPRINTF_MIDI_EVENT( "keypress event on Channel %2d, note: %5d, velocity %d       \n",
@@ -263,6 +277,7 @@ void midi_action(snd_seq_t *seq_handle) {
                         i,db.note_channel_max[i]);
 	}
         fprintf(stdout,"Max number of note all channel, in the same time : %i\n",db.all_channel);
+        db.display_note_channel9();
         db_tune.check_for_note_on();
         
 	break;
@@ -357,10 +372,11 @@ int main(int argc, char *argv[]) {
   snd_seq_poll_descriptors(seq_handle, pfd, npfd, POLLIN);
   
   ttyusb1.Open("/dev/ttyUSB1",3000000);
+//  ttyusb1.Open("/dev/ttyUSB2",3000000);
   pfd[npfd].fd = ttyusb1.return_filedes();
   pfd[npfd].events = POLLIN;
 
-  db_tune.set_filter(0x6,0x47);   
+  db_tune.set_filter(0x9,0x35);   
 
   while (1) {
     if (poll(pfd, (npfd+serial_fd), 100000) > 0) {

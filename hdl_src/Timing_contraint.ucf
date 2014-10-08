@@ -1,0 +1,33 @@
+#Created by Constraints Editor (xc3s500e-vq100-4) - 2013/11/19
+#Clk 96M -10 ns
+NET "clk96m" TNM_NET = "clk96Mgrp";
+TIMESPEC "TS_clk96M" = PERIOD "clk96Mgrp" 10.4 ns HIGH 50%;
+
+NET "synth0/data_valid" TNM_NET = FFS "dataValid_grp";
+TIMESPEC "TS_dataValid" = FROM "dataValid_grp" TO "dataValid_grp" TS_clk96M*5;
+
+INST "synth0/DP_ram0/*" TNM_NET = RAMS "dpram_grp";
+#TIMESPEC "TS_dpramout" = FROM "dpram_grp" TO "dataValid_grp" TIG;
+TIMESPEC "TS_dpramout" = FROM "dpram_grp" TO "dataValid_grp" TS_clk96M;
+
+NET "synth0/SD_ss0/SDdriver0/nb_data_*" TNM_NET = FFS "SDnbdata_grp";
+NET "synth0/SD_ss0/SDdriver0/block_cnt_*" TNM_NET = FFS "SDblock_grp";
+NET "synth0/SD_ss0/SDdriver0/data_cpt_*" TNM_NET = FFS "SDdatacpt_grp";
+
+TIMESPEC "TS_FP_SDblock" = FROM "dpram_grp" TO "SDblock_grp" TIG;
+TIMESPEC "TS_FP_datacpt" = FROM "dpram_grp" TO "SDdatacpt_grp" TIG;
+TIMESPEC "TS_FP_nbdata" = FROM "SDnbdata_grp" TO "SDblock_grp" TIG;
+TIMESPEC "TS_FP_ram2nb_data" = FROM "dpram_grp" TO "SDnbdata_grp" TIG;
+
+TIMESPEC "TS_nbdata" = FROM "SDnbdata_grp" TO "SDnbdata_grp" TS_clk96M*16;
+#Created by Constraints Editor (xc3s500e-vq100-4) - 2014/10/01
+NET "bp1" OFFSET = IN 15 ns VALID 31 ns BEFORE "osc_in" RISING;
+NET "bp2" OFFSET = IN 31 ns VALID 31 ns BEFORE "osc_in" RISING;
+NET "bp3" OFFSET = IN 31 ns VALID 31 ns BEFORE "osc_in" RISING;
+NET "bp4" OFFSET = IN 31 ns VALID 31 ns BEFORE "osc_in" RISING;
+NET "audio_l" OFFSET = OUT 31 ns AFTER "osc_in";
+NET "audio_r" OFFSET = OUT 31 ns AFTER "osc_in";
+NET "led4" OFFSET = OUT 31 ns AFTER "osc_in";
+NET "led1" OFFSET = OUT 31 ns AFTER "osc_in";
+NET "led2" OFFSET = OUT 31 ns AFTER "osc_in";
+NET "led3" OFFSET = OUT 31 ns AFTER "osc_in";

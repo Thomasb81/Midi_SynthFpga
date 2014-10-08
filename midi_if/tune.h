@@ -79,6 +79,14 @@ class tune {
     void remove(uint8_t addr);
     void set_filter(uint8_t channel, uint8_t note);
     void check_for_note_on();
+    uint8_t translate_drum(uint8_t note);
 };
+
+struct midi_drum_map {
+  const uint8_t note;
+  const string drum_name;
+  const uint8_t map;
+};
+
 
 #endif

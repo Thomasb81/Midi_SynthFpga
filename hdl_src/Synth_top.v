@@ -5,10 +5,17 @@ output usb_rx; // connected to fpga_uart_tx
 input usb_tx; // connected to fpga_uart_rx
 output audio_r;
 output audio_l;
+/*
 output reg led1;
 output reg led2;
 output reg led3;
 output reg led4;
+*/
+output led1;
+output led2;
+output led3;
+output led4;
+
 
 input bp1;
 input bp2;
@@ -69,7 +76,9 @@ synth2 synth0 (
     .audio_r(audio_r),
     .audio_l(audio_l),
     .data(read_data),
-    .data_valid(read_data_valid)
+    .data_valid(read_data_valid),
+    .SDdriver_state({led3,led2,led1}),
+    .fifo_empty(led4)
 
 );
 
@@ -94,7 +103,8 @@ assign led2 = data[2] | data[3];
 assign led3 = data[4] | data[5];
 assign led4 = data[6] | data[7];
 */
-
+//assign led4 = 1'b0;
+/*
 always @(posedge clk96m) begin
   if (pitch_wheel == 1'b1) begin
   led4 <= note[5];
@@ -103,7 +113,7 @@ always @(posedge clk96m) begin
   led1 <= note[2];
   end
 end
-
+*/
 
 
 midi_ctrl midi_ctrl (

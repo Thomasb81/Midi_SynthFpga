@@ -564,13 +564,11 @@ FD stop_reg
 
   // Form data strobe
 
-		LUT2 strobe_lut
+		LUT2 #(.INIT(4'h8)) strobe_lut
   		( 		.I0(valid_char),
          	.I1(en_16_x_baud),
-            .O(decode_data_strobe ) )/* synthesis xc_props = "INIT=8"*/;
-		// synthesis translate_off
-		defparam strobe_lut.INIT = 4'h8;
-		// synthesis translate_on
+            .O(decode_data_strobe ) )
+		;
 
   		FD strobe_reg
    	( 		.D(decode_data_strobe),
@@ -584,5 +582,3 @@ endmodule
 // END OF FILE KCUART_RX.V
 //
 ////////////////////////////////////////////////////////////////////////////////////
-
-

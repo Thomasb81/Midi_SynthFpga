@@ -10,7 +10,10 @@ module soundgen(
     input [17:0] velocity,
     input tick48k,
     output reg [17:0] sound_r,
-    output reg [17:0] sound_l
+    output reg [17:0] sound_l,
+    // drum
+    input [15:0] drum_sample0,
+    input drum_sample0_valid
     );
 
 wire [9:0] addr;
@@ -28,7 +31,8 @@ reg [17:0] sample_r;
 reg [17:0] sample_l;
 
 wire [17:0] mixerA, mixerB;
-wire ctrl_mixerA,ctrl_mixerB, ctrl_muxAddr;
+wire [1:0] ctrl_mixerA;
+wire ctrl_mixerB, ctrl_muxAddr;
 
 pipelined_multiplier adsrxvelocity (
 .clk(clk),
@@ -69,7 +73,8 @@ always @(posedge clk) begin
   output_sample_reg <= output_sample;
 end
 
-assign mixerA = (ctrl_mixerA == 1'b1) ? 18'h20000 : output_sample_reg;
+assign mixerA = (ctrl_mixerA == 2'b10) ? {drum_sample0,2'b00} : 
+	        (ctrl_mixerA == 2'b01) ? 18'h20000 : output_sample_reg;
 assign mixerB = (ctrl_mixerB == 1'b1) ? sample_l : sample_r;
 
 mixer mixer0 (
@@ -106,15 +111,18 @@ always @(posedge clk) begin
   valid_q <= valid;
   valid_q2 <= valid_q;
   valid_q3 <= valid_q2;
-  valid_q4 <= valid_q3;
+  valid_q4 <= valid_q3 || (drum_sample0_valid && ~valid_q4 && ~valid_q5);
   valid_q5 <= valid_q4;
   valid_q6 <= valid_q5;
   valid_q7 <= valid_q6;
   valid_q8 <= valid_q7;
 end
 
-assign {ctrl_mixerA,ctrl_mixerB} = (valid_q4 == 1'b1 && valid_q5==1'b0) ? 2'b00 :
-                                   (valid_q4 == 1'b0 && valid_q5==1'b1) ? 2'b01 :
-                                                                          2'b11 ;
+assign {ctrl_mixerA,ctrl_mixerB} = 
+	(drum_sample0_valid == 1'b1 && valid_q4 == 1'b1 && valid_q5==1'b0 ) ? 3'b100 :
+	(drum_sample0_valid == 1'b1 && valid_q4 == 1'b0 && valid_q5==1'b1 ) ? 3'b101 :
+        (drum_sample0_valid == 1'b0 && valid_q4 == 1'b1 && valid_q5==1'b0 ) ? 3'b000 :
+        (drum_sample0_valid == 1'b0 && valid_q4 == 1'b0 && valid_q5==1'b1 ) ? 3'b001 :
+                                                                              3'b011 ;
 assign ctrl_muxAddr = (valid_q == 1'b1) ? 1'b1 : 1'b0;
 endmodule

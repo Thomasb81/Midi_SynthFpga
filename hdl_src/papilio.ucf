@@ -36,27 +36,22 @@
 # 02  P26  P78  P94    -      BLU    SW1        A2L     SCK      CLK2    LED3
 # 01  P23  P83  P92    VS     HS     SW2        A2S     SO       DAT1    PB4
 # 00  P18  P85  P91    HS     VS     LED        A2R     D1       ClK1    LED4
-
 # Example 1
 # Say you have a button board BPW5007 plugged into wing AL look at a pin in
 # the "Button" column, say LED4 then across to column AL and you can see it
 # corresponds to FPGA pin P18, if the same board was plugged into BH then
 # LED4 would be P58
-
 # Example 2
 # If you have a VGA board BPW5017 plugged into wing CH, then look at a pin
 # under the VGA8 column, say BLU and across to column CH and you find that
 # BLU is FPGA pin P10, if the same VGA board was plugged into wing AH then
 # BLU would be FPGA pin P65
-
 # Once you find the FPGA pin, go to the NET definition below and uncomment
 # the respective line. You may rename the NET from WingX_Ynn to the name you
 # use in your design
-
 ###########################################################
 # UCF File starts here, uncomment lines below as required #
 ###########################################################
-
 CONFIG PART = XC3S500E-VQ100-4 ;
 NET OSC_IN					LOC = "P89"  |IOSTANDARD = LVTTL; # 32.00 MHz oscillator
 #NET JTAG_TMS					LOC = "P75"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ;
@@ -70,7 +65,6 @@ NET USB_RX					LOC = "P90"  |IOSTANDARD = LVTTL |DRIVE = 8 |SLEW = FAST ;
 #NET FLASH_CK					LOC = "P50"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ;
 #NET FLASH_SI					LOC = "P27"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ;
 #NET FLASH_SO					LOC = "P44"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP;
-
 #NET AUDIO_L						LOC = "P86"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ; # on wing AH
 #NET Wing1_AH14				LOC = "P84"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST | PULLUP ; #
 #NET AUDIO_R						LOC = "P79"  | IOSTANDARD = LVTTL | DRIVE = 8 | SLEW = FAST ; # on wing AH
@@ -127,6 +121,3 @@ NET LED4							LOC = "P85"  |IOSTANDARD = LVTTL |DRIVE = 8 |SLEW = FAST ; # on w
 #Oscillator 32M
 NET "osc_in" TNM_NET = osc_in;
 TIMESPEC TS_osc_in = PERIOD "osc_in" 31.25 ns HIGH 50%;
-#Created by Constraints Editor (xc3s500e-vq100-4) - 2013/11/19
-#Clk 96M -10 ns
-PIN "clk_builder0/DCM_SP_INST.CLKFX" TNM = clk96M;

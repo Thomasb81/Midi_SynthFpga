@@ -42,7 +42,7 @@ void stats::note_off(uint8_t channel,uint8_t note) {
 void stats::display_note_channel9() {
   set<uint8_t>::iterator it = note_channel9.begin();
 
-  printf("number of drum sample : %d\n",note_channel9.size());
+  printf("number of drum sample : %ld\n",note_channel9.size());
   while( it !=note_channel9.end() ) {
     printf("%i : %s\n", *it, midi_drum_data_set[*it-27].drum_name.c_str());    
 

@@ -7,14 +7,18 @@ output mosi,
 input miso,
 output cs,
 
-input [6:0] id,
+input [7:0] id,
 
 input note_on,
 input note_off,
 output completed,
 
 input rd_en,
-output [15:0] data_out
+output [15:0] data_out,
+output fifo_full,
+output fifo_empty,
+output fifo_halffull,
+output [2:0] SDdriver_state
 
 );
 
@@ -23,10 +27,9 @@ wire SDctrl_start;
 wire rdy_w;
 wire [7:0] data_driver;
 wire data_driver_valid;
-wire fifo_empty;
-wire fifo_halffull;
 wire [15:0] fifo_data_in;
 wire fifo_wr_en;
+
 
 SDctrl SDctrl0(
 .clk(clk96m),
@@ -55,7 +58,7 @@ SDdriver SDdriver0(
 .rst(rst),
 .start(note_on),
 .stop(note_off),
-.sample_code({1'b0,id}),
+.sample_code(id),
 .fifo_empty(fifo_empty),
 .fifo_prog(fifo_halffull),
 .fifo_wr(fifo_wr_en),
@@ -67,27 +70,26 @@ SDdriver SDdriver0(
 
 .SDctrl_address(sd_address),
 .SDctrl_start(SDctrl_start),
-.state(),
+.state(SDdriver_state),
 .nb_data()
 
 );
 
 
-fifo_256w fifo0(
+fifo #(
+  .bits(8),
+  .data_width(16)
+  )
+  fifo1(
 .clk(clk96m),
-.srst(rst),
-.din(fifo_data_in),
-.wr_en(fifo_wr_en),
-.rd_en(rd_en),
-.dout(data_out),
-.full(),
+.rst(rst),
+.wr(fifo_wr_en),
+.rd(rd_en),
+.write(fifo_data_in),
+.read(data_out),
+.full(fifo_full),
 .empty(fifo_empty),
-.prog_full(fifo_halffull)
+.midle(fifo_halffull)
 );
-
-
-
-
-
 
 endmodule
