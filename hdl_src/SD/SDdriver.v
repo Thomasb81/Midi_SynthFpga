@@ -167,7 +167,7 @@ always @(posedge clk) begin
       if (finish ==  1'b1)begin
         state <= `IDLE;
       end
-      else if (fifo_prog == 1'b1 && SDctrl_available == 1'b1 && SDctrl_available_latch == 1'b1) begin
+      else if (fifo_prog == 1'b0 && SDctrl_available == 1'b1 && SDctrl_available_latch == 1'b1) begin
 	state <= `FETCH;
         SDctrl_start <= 1'b1;
 	data_cpt <= 11'h000;

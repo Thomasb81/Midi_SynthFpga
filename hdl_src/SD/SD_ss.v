@@ -80,7 +80,7 @@ fifo #(
   .bits(8),
   .data_width(16)
   )
-  fifo1(
+  fifo0(
 .clk(clk96m),
 .rst(rst),
 .wr(fifo_wr_en),

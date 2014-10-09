@@ -31,6 +31,7 @@ architecture behave of fifo is
 
   signal wraddr: unsigned(bits-1 downto 0) := (others => '0');
   signal rdaddr: unsigned(bits-1 downto 0) := (others => '0');
+  signal count : unsigned(bits-1 downto 0) := (others => '0');
 
 begin
 
@@ -59,7 +60,7 @@ begin
       full_v:='0';
     end if;
 
-    if (wraddr(bits-2 downto 0) = rdaddr(bits-2 downto 0)) and (wraddr(bits-1) /= rdaddr(bits-1)) then
+    if count > (2**(bits-1)-1) then
       midle_v := '1';
     else
       midle_v := '0';
@@ -79,6 +80,14 @@ begin
         if rd='1' and empty_v='0' then
           rdaddr <= rdaddr+1;
         end if;
+
+	if wr='1' and rd='0' and full_v = '0' then
+	  count <= count + 1;
+        elsif wr='0' and rd='1' and empty_v = '0' then
+	  count <= count - 1;
+        end if;
+
+
       end if;
 
       full <= full_v;
