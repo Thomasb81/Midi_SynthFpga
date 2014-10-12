@@ -13,11 +13,14 @@ TIMESPEC "TS_dpramout" = FROM "dpram_grp" TO "dataValid_grp" TS_clk96M;
 NET "synth0/SD_ss0/SDdriver0/nb_data_*" TNM_NET = FFS "SDnbdata_grp";
 NET "synth0/SD_ss0/SDdriver0/block_cnt_*" TNM_NET = FFS "SDblock_grp";
 NET "synth0/SD_ss0/SDdriver0/data_cpt_*" TNM_NET = FFS "SDdatacpt_grp";
+NET "synth0/SD_ss0/SDdriver0/finish" TPTHRU = "DSDriver_finish";
 
 TIMESPEC "TS_FP_SDblock" = FROM "dpram_grp" TO "SDblock_grp" TIG;
 TIMESPEC "TS_FP_datacpt" = FROM "dpram_grp" TO "SDdatacpt_grp" TIG;
 TIMESPEC "TS_FP_nbdata" = FROM "SDnbdata_grp" TO "SDblock_grp" TIG;
 TIMESPEC "TS_FP_ram2nb_data" = FROM "dpram_grp" TO "SDnbdata_grp" TIG;
+TIMESPEC "TS_FP_nbdata2datacpt" = FROM "SDnbdata_grp" THRU "DSDriver_finish" TO "SDblock_grp" TIG;
+
 
 TIMESPEC "TS_nbdata" = FROM "SDnbdata_grp" TO "SDnbdata_grp" TS_clk96M*16;
 #Created by Constraints Editor (xc3s500e-vq100-4) - 2014/10/01
