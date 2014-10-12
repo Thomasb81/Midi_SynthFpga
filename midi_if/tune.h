@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "serialib.h"
+#include "drum.h"
 
 #define MAX_TUNE 128
 
@@ -82,11 +83,6 @@ class tune {
     uint8_t translate_drum(uint8_t note);
 };
 
-struct midi_drum_map {
-  const uint8_t note;
-  const string drum_name;
-  const uint8_t map;
-};
 
 
 #endif
