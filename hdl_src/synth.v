@@ -116,8 +116,12 @@ reg [4:0] pitchwhell_chan[0:15];
 wire wavetable_left_valid;
 wire wavetable_right_valid;
 
+wire [9:0] sample_right;
+wire [9:0] sample_left;
+
 //drum
-wire drum0_valid;
+wire drum0_valid_r;
+wire drum0_valid_l;
 wire [15:0] drum0_sample;
 
 // synthesis translate_off
@@ -281,16 +285,19 @@ adsr_state_sample_w,
 sustain_sample_r,
 dummy_5bits_sample};
 
-adsr_mngt2 adsr_mngt2_0(
-//.velocity_value(velocity_sample_r),
-.sustain_value(sustain_sample_r),
-.attack_rate(7'b0100000),
-.decay_rate(7'b0100000),
-.release_rate(7'b0001000),
+adsr_mngt2 
+#(.DRUM_CHANNEL(`DRUM_CHANNEL))
+adsr_mngt2_0(
+.i_sustain_value(sustain_sample_r),
+.i_attack_rate(7'b0100000),
+.i_decay_rate(7'b0100000),
+.i_release_rate(7'b0001000),
 .i_state(adsr_state_sample_r),
 .i_volume(volume_sample_r),
 .i_note_pressed(note_pressed_sample_r),
 .i_note_released(note_released_sample_r),
+.i_channel(channel_sample_r),
+.i_fifo_empty(fifo_empty),
 .o_state(adsr_state),
 .o_note_pressed(note_pressed_cal),
 .o_note_released(note_released_cal),
@@ -376,24 +383,31 @@ assign wavetable_4left = wavetable_sample_r[18:9]+256;
 
 assign wavetable_right_valid = (sample_state == `SAMPLE_ADDR_MEM) && channel_sample_r != `DRUM_CHANNEL;
 assign wavetable_left_valid =  (sample_state == `SAMPLE_READ) && channel_sample_r != `DRUM_CHANNEL;
-assign drum0_valid = count == 11'd1290 || count == 11'd1291 ||count == 11'd1292 ||count == 11'd1292; 
+assign drum0_valid_r = (sample_state == `SAMPLE_ADDR_MEM ) && 
+	channel_sample_r == `DRUM_CHANNEL && fifo_empty == 1'b0 ; 
+assign drum0_valid_l = ( sample_state == `SAMPLE_READ) && 
+	channel_sample_r == `DRUM_CHANNEL && fifo_empty == 1'b0 ; 
+
+assign sample_right = wavetable_sample_r[18:9];
+assign sample_left = wavetable_4left;
+		      
 
 
+//soundgen soundgen0 (
 soundgen soundgen0 (
     .clk(clk96), 
     .rst(rst), 
-    .wavetable_r(wavetable_sample_r[18:9]), 
+    .wavetable_r(sample_right), 
     .wavetable_r_valid(wavetable_right_valid), 
-    .wavetable_l(wavetable_4left), 
+    .wavetable_l(sample_left), 
     .wavetable_l_valid(wavetable_left_valid),
+    .sound(drum0_sample),
+    .sound_valid(drum0_valid_r|| drum0_valid_l),
     .volume_adsr(volume_sample_r), 
     .velocity({1'b0,velocity_sample_r,10'b0000000000}),
     .tick48k(count==11'd1999), 
     .sound_r(sound_r), 
-    .sound_l(sound_l),
-    //drum
-    .drum_sample0(drum0_sample),
-    .drum_sample0_valid(drum0_valid)
+    .sound_l(sound_l)
     );
 
 dac16 inst_dac16_r (
@@ -424,11 +438,9 @@ SDFeed SD_ss0(
 //.id(8'h01),
 .note_on(note_pressed_sample_r && channel_sample_r == `DRUM_CHANNEL ),
 .note_off(note_released_sample_r && channel_sample_r == `DRUM_CHANNEL),
-//.note_off(1'b0),
-//.note_off(1'b0),
 .completed(),
 
-.rd_en(count == 11'd1298),
+.rd_en(count == 11'd1999),
 .data_out(drum0_sample),
 .fifo_full(),
 .fifo_empty(fifo_empty),

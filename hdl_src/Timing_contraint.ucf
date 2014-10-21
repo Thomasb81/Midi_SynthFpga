@@ -1,36 +1,27 @@
-#Created by Constraints Editor (xc3s500e-vq100-4) - 2013/11/19
-#Clk 96M -10 ns
-NET "clk96m" TNM_NET = "clk96Mgrp";
-TIMESPEC "TS_clk96M" = PERIOD "clk96Mgrp" 10.4 ns HIGH 50%;
 
-NET "synth0/data_valid" TNM_NET = FFS "dataValid_grp";
-TIMESPEC "TS_dataValid" = FROM "dataValid_grp" TO "dataValid_grp" TS_clk96M*5;
+#Created by Constraints Editor (xc3s500e-vq100-4) - 2014/10/13
+TIMEGRP "DATAVALID" = FFS("synth0/data_valid");
+TIMESPEC TS_DPRAM2DATAVALID = FROM "DPRAM_grp" TO "DATAVALID" TS_clk_builder0_CLKFX_BUF * 2;
 
-INST "synth0/DP_ram0/*" TNM_NET = RAMS "dpram_grp";
-#TIMESPEC "TS_dpramout" = FROM "dpram_grp" TO "dataValid_grp" TIG;
-TIMESPEC "TS_dpramout" = FROM "dpram_grp" TO "dataValid_grp" TS_clk96M;
-
-NET "synth0/SD_ss0/SDdriver0/nb_data_*" TNM_NET = FFS "SDnbdata_grp";
-NET "synth0/SD_ss0/SDdriver0/block_cnt_*" TNM_NET = FFS "SDblock_grp";
-NET "synth0/SD_ss0/SDdriver0/data_cpt_*" TNM_NET = FFS "SDdatacpt_grp";
-NET "synth0/SD_ss0/SDdriver0/finish" TPTHRU = "DSDriver_finish";
-
-TIMESPEC "TS_FP_SDblock" = FROM "dpram_grp" TO "SDblock_grp" TIG;
-TIMESPEC "TS_FP_datacpt" = FROM "dpram_grp" TO "SDdatacpt_grp" TIG;
-TIMESPEC "TS_FP_nbdata" = FROM "SDnbdata_grp" TO "SDblock_grp" TIG;
-TIMESPEC "TS_FP_ram2nb_data" = FROM "dpram_grp" TO "SDnbdata_grp" TIG;
-TIMESPEC "TS_FP_nbdata2datacpt" = FROM "SDnbdata_grp" THRU "DSDriver_finish" TO "SDblock_grp" TIG;
-
-
-TIMESPEC "TS_nbdata" = FROM "SDnbdata_grp" TO "SDnbdata_grp" TS_clk96M*16;
-#Created by Constraints Editor (xc3s500e-vq100-4) - 2014/10/01
-NET "bp1" OFFSET = IN 15 ns VALID 31 ns BEFORE "osc_in" RISING;
-NET "bp2" OFFSET = IN 31 ns VALID 31 ns BEFORE "osc_in" RISING;
-NET "bp3" OFFSET = IN 31 ns VALID 31 ns BEFORE "osc_in" RISING;
-NET "bp4" OFFSET = IN 31 ns VALID 31 ns BEFORE "osc_in" RISING;
-NET "audio_l" OFFSET = OUT 31 ns AFTER "osc_in";
-NET "audio_r" OFFSET = OUT 31 ns AFTER "osc_in";
-NET "led4" OFFSET = OUT 31 ns AFTER "osc_in";
-NET "led1" OFFSET = OUT 31 ns AFTER "osc_in";
-NET "led2" OFFSET = OUT 31 ns AFTER "osc_in";
-NET "led3" OFFSET = OUT 31 ns AFTER "osc_in";
+#Created by Constraints Editor (xc3s500e-vq100-4) - 2014/10/13
+INST "synth0/DP_ram0/dpram0" TNM = DPRAM_grp;
+INST "synth0/DP_ram0/dpram1" TNM = DPRAM_grp;
+#Created by Constraints Editor (xc3s500e-vq100-4) - 2014/10/13
+#Created by Constraints Editor (xc3s500e-vq100-4) - 2014/10/13
+TIMEGRP "BLOCKCNT" = FFS("synth0/SD_ss0/SDdriver0/block_cnt<0>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<1>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<2>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<3>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<4>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<5>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<6>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<7>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<8>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<9>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<10>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<11>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<12>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<13>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<14>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<15>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<16>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<17>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<18>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<19>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<20>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<21>") FFS("synth0/SD_ss0/SDdriver0/block_cnt<22>") FFS("synth0/SD_ss0/SDdriver0/nb_data<0>") FFS("synth0/SD_ss0/SDdriver0/nb_data<1>") FFS("synth0/SD_ss0/SDdriver0/nb_data<2>") FFS("synth0/SD_ss0/SDdriver0/nb_data<3>") FFS("synth0/SD_ss0/SDdriver0/nb_data<4>") FFS("synth0/SD_ss0/SDdriver0/nb_data<5>") FFS("synth0/SD_ss0/SDdriver0/nb_data<6>") FFS("synth0/SD_ss0/SDdriver0/nb_data<7>") FFS("synth0/SD_ss0/SDdriver0/nb_data<8>") FFS("synth0/SD_ss0/SDdriver0/nb_data<9>") FFS("synth0/SD_ss0/SDdriver0/nb_data<10>") FFS("synth0/SD_ss0/SDdriver0/nb_data<11>") FFS("synth0/SD_ss0/SDdriver0/nb_data<12>") FFS("synth0/SD_ss0/SDdriver0/nb_data<13>") FFS("synth0/SD_ss0/SDdriver0/nb_data<14>") FFS("synth0/SD_ss0/SDdriver0/nb_data<15>") FFS("synth0/SD_ss0/SDdriver0/nb_data<16>") FFS("synth0/SD_ss0/SDdriver0/nb_data<17>") FFS("synth0/SD_ss0/SDdriver0/nb_data<18>") FFS("synth0/SD_ss0/SDdriver0/nb_data<19>") FFS("synth0/SD_ss0/SDdriver0/nb_data<20>") FFS("synth0/SD_ss0/SDdriver0/nb_data<21>") FFS("synth0/SD_ss0/SDdriver0/nb_data<22>") FFS("synth0/SD_ss0/SDdriver0/nb_data<23>") FFS("synth0/SD_ss0/SDdriver0/nb_data<24>") FFS("synth0/SD_ss0/SDdriver0/nb_data<25>") FFS("synth0/SD_ss0/SDdriver0/nb_data<26>") FFS("synth0/SD_ss0/SDdriver0/nb_data<27>") FFS("synth0/SD_ss0/SDdriver0/nb_data<28>") FFS("synth0/SD_ss0/SDdriver0/nb_data<29>") FFS("synth0/SD_ss0/SDdriver0/nb_data<30>") FFS("synth0/SD_ss0/SDdriver0/nb_data<31>") FFS("synth0/SD_ss0/SDdriver0/data_cpt<0>") FFS("synth0/SD_ss0/SDdriver0/data_cpt<1>") FFS("synth0/SD_ss0/SDdriver0/data_cpt<2>") FFS("synth0/SD_ss0/SDdriver0/data_cpt<3>") FFS("synth0/SD_ss0/SDdriver0/data_cpt<4>") FFS("synth0/SD_ss0/SDdriver0/data_cpt<5>") FFS("synth0/SD_ss0/SDdriver0/data_cpt<6>") FFS("synth0/SD_ss0/SDdriver0/data_cpt<7>") FFS("synth0/SD_ss0/SDdriver0/data_cpt<8>") FFS("synth0/SD_ss0/SDdriver0/data_cpt<9>") FFS("synth0/SD_ss0/SDdriver0/data_cpt<10>");
+NET "synth0/SD_ss0/SDdriver0/finish" TPTHRU = "FINISH";
+#Created by Constraints Editor (xc3s500e-vq100-4) - 2014/10/13
+TIMESPEC TS_DPRAM2BLOCKCOUNT = FROM "DPRAM_grp" TO "BLOCKCNT" TIG;
+#Created by Constraints Editor (xc3s500e-vq100-4) - 2014/10/14
+TIMEGRP "SOUNDGEN0_OUTDATA" = RAMS("synth0/soundgen0/out_data<15>") RAMS("synth0/soundgen0/out_data<14>") RAMS("synth0/soundgen0/out_data<13>") RAMS("synth0/soundgen0/out_data<12>") RAMS("synth0/soundgen0/out_data<11>") RAMS("synth0/soundgen0/out_data<10>") RAMS("synth0/soundgen0/out_data<9>") RAMS("synth0/soundgen0/out_data<8>") RAMS("synth0/soundgen0/out_data<7>") RAMS("synth0/soundgen0/out_data<6>") RAMS("synth0/soundgen0/out_data<5>") RAMS("synth0/soundgen0/out_data<4>") RAMS("synth0/soundgen0/out_data<3>") RAMS("synth0/soundgen0/out_data<2>") RAMS("synth0/soundgen0/out_data<1>") RAMS("synth0/soundgen0/out_data<0>") RAMS("synth0/soundgen0/out_data<17>") RAMS("synth0/soundgen0/out_data<16>");
+#Created by Constraints Editor (xc3s500e-vq100-4) - 2014/10/14
+TIMEGRP "FIFOOUT_DRUM" = RAMS("synth0/drum0_sample<15>") RAMS("synth0/drum0_sample<14>") RAMS("synth0/drum0_sample<13>") RAMS("synth0/drum0_sample<12>") RAMS("synth0/drum0_sample<11>") RAMS("synth0/drum0_sample<10>") RAMS("synth0/drum0_sample<9>") RAMS("synth0/drum0_sample<8>") RAMS("synth0/drum0_sample<7>") RAMS("synth0/drum0_sample<6>") RAMS("synth0/drum0_sample<5>") RAMS("synth0/drum0_sample<4>") RAMS("synth0/drum0_sample<3>") RAMS("synth0/drum0_sample<2>") RAMS("synth0/drum0_sample<1>") RAMS("synth0/drum0_sample<0>");
+#Created by Constraints Editor (xc3s500e-vq100-4) - 2014/10/14
+TIMEGRP "SDDRIVER_NBDATA" = FFS("synth0/SD_ss0/SDdriver0/nb_data<0>") FFS("synth0/SD_ss0/SDdriver0/nb_data<1>") FFS("synth0/SD_ss0/SDdriver0/nb_data<2>") FFS("synth0/SD_ss0/SDdriver0/nb_data<3>") FFS("synth0/SD_ss0/SDdriver0/nb_data<4>") FFS("synth0/SD_ss0/SDdriver0/nb_data<5>") FFS("synth0/SD_ss0/SDdriver0/nb_data<6>") FFS("synth0/SD_ss0/SDdriver0/nb_data<7>") FFS("synth0/SD_ss0/SDdriver0/nb_data<8>") FFS("synth0/SD_ss0/SDdriver0/nb_data<9>") FFS("synth0/SD_ss0/SDdriver0/nb_data<10>") FFS("synth0/SD_ss0/SDdriver0/nb_data<11>") FFS("synth0/SD_ss0/SDdriver0/nb_data<12>") FFS("synth0/SD_ss0/SDdriver0/nb_data<13>") FFS("synth0/SD_ss0/SDdriver0/nb_data<14>") FFS("synth0/SD_ss0/SDdriver0/nb_data<15>") FFS("synth0/SD_ss0/SDdriver0/nb_data<16>") FFS("synth0/SD_ss0/SDdriver0/nb_data<17>") FFS("synth0/SD_ss0/SDdriver0/nb_data<18>") FFS("synth0/SD_ss0/SDdriver0/nb_data<19>") FFS("synth0/SD_ss0/SDdriver0/nb_data<20>") FFS("synth0/SD_ss0/SDdriver0/nb_data<21>") FFS("synth0/SD_ss0/SDdriver0/nb_data<22>") FFS("synth0/SD_ss0/SDdriver0/nb_data<23>") FFS("synth0/SD_ss0/SDdriver0/nb_data<24>") FFS("synth0/SD_ss0/SDdriver0/nb_data<25>") FFS("synth0/SD_ss0/SDdriver0/nb_data<26>") FFS("synth0/SD_ss0/SDdriver0/nb_data<27>") FFS("synth0/SD_ss0/SDdriver0/nb_data<28>") FFS("synth0/SD_ss0/SDdriver0/nb_data<29>") FFS("synth0/SD_ss0/SDdriver0/nb_data<30>") FFS("synth0/SD_ss0/SDdriver0/nb_data<31>");
+TIMESPEC TS_SDDRIVER_NBDATA2BLOCKCNT = FROM "SDDRIVER_NBDATA" TO "BLOCKCNT" TIG;
+#Created by Constraints Editor (xc3s500e-vq100-4) - 2014/10/14
+TIMEGRP "SDDRIVER_FIFODATA" = FFS("synth0/SD_ss0/SDdriver0/fifo_data<0>") FFS("synth0/SD_ss0/SDdriver0/fifo_data<1>") FFS("synth0/SD_ss0/SDdriver0/fifo_data<2>") FFS("synth0/SD_ss0/SDdriver0/fifo_data<3>") FFS("synth0/SD_ss0/SDdriver0/fifo_data<4>") FFS("synth0/SD_ss0/SDdriver0/fifo_data<5>") FFS("synth0/SD_ss0/SDdriver0/fifo_data<6>") FFS("synth0/SD_ss0/SDdriver0/fifo_data<7>") FFS("synth0/SD_ss0/SDdriver0/fifo_data<8>") FFS("synth0/SD_ss0/SDdriver0/fifo_data<9>") FFS("synth0/SD_ss0/SDdriver0/fifo_data<10>") FFS("synth0/SD_ss0/SDdriver0/fifo_data<11>") FFS("synth0/SD_ss0/SDdriver0/fifo_data<12>") FFS("synth0/SD_ss0/SDdriver0/fifo_data<13>") FFS("synth0/SD_ss0/SDdriver0/fifo_data<14>") FFS("synth0/SD_ss0/SDdriver0/fifo_data<15>");
+TIMESPEC TS_RAM2SDFIFODATA = FROM "DPRAM_grp" THRU "FINISH" TO "SDDRIVER_FIFODATA" TIG;
+#Created by Constraints Editor (xc3s500e-vq100-4) - 2014/10/14
+TIMEGRP "SNDGEN_SAMPLE_RL" = FFS("synth0/soundgen0/sample_r<0>") FFS("synth0/soundgen0/sample_r<1>") FFS("synth0/soundgen0/sample_r<2>") FFS("synth0/soundgen0/sample_r<3>") FFS("synth0/soundgen0/sample_r<4>") FFS("synth0/soundgen0/sample_r<5>") FFS("synth0/soundgen0/sample_r<6>") FFS("synth0/soundgen0/sample_r<7>") FFS("synth0/soundgen0/sample_r<8>") FFS("synth0/soundgen0/sample_r<9>") FFS("synth0/soundgen0/sample_r<10>") FFS("synth0/soundgen0/sample_r<11>") FFS("synth0/soundgen0/sample_r<12>") FFS("synth0/soundgen0/sample_r<13>") FFS("synth0/soundgen0/sample_r<14>") FFS("synth0/soundgen0/sample_r<15>") FFS("synth0/soundgen0/sample_r<16>") FFS("synth0/soundgen0/sample_r<17>") FFS("synth0/soundgen0/sample_l<0>") FFS("synth0/soundgen0/sample_l<1>") FFS("synth0/soundgen0/sample_l<2>") FFS("synth0/soundgen0/sample_l<3>") FFS("synth0/soundgen0/sample_l<4>") FFS("synth0/soundgen0/sample_l<5>") FFS("synth0/soundgen0/sample_l<6>") FFS("synth0/soundgen0/sample_l<7>") FFS("synth0/soundgen0/sample_l<8>") FFS("synth0/soundgen0/sample_l<9>") FFS("synth0/soundgen0/sample_l<10>") FFS("synth0/soundgen0/sample_l<11>") FFS("synth0/soundgen0/sample_l<12>") FFS("synth0/soundgen0/sample_l<13>") FFS("synth0/soundgen0/sample_l<14>") FFS("synth0/soundgen0/sample_l<15>") FFS("synth0/soundgen0/sample_l<16>") FFS("synth0/soundgen0/sample_l<17>");
+#Created by Constraints Editor (xc3s500e-vq100-4) - 2014/10/14

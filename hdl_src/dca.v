@@ -1,22 +1,21 @@
+`timescale 1ns / 1ps
 module dca (
   input clk,
+  input rst,
   input [17:0] sample,
   input [17:0] envelope,
   output [17:0] result 
 );
 
-reg [17:0] sample_q, envelope_q;
 wire [35:0] produit;
 
-always @(posedge clk) begin
-  sample_q <= {~sample[17],sample[16:0]};
-  envelope_q <= envelope;
-end
-
-MULT18X18 dac_mult(
+MULT18X18S dac_mult(
+.C(clk),
+.CE(1'b1),
+.R(rst),
 .P(produit),
-.A(sample_q),
-.B(envelope_q)
+.A({~sample[17],sample[16:0]}),
+.B(envelope)
 );
 
 assign result = {~produit[35],produit[34:18]};
