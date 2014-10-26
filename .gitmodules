@@ -1,3 +1,3 @@
 [submodule "hdl_src/uart/osdvu"]
 	path = hdl_src/uart/osdvu
-	url = git://goddard.net.nz/osdvu
+	url = https://github.com/Thomasb81/osdvu.git

@@ -42,7 +42,7 @@ begin
     end if;
   end process;
 
-  process(clk,rdaddr,wraddr,rst)
+  process(clk,rdaddr,wraddr,rst,count)
     variable full_v: std_logic;
     variable empty_v: std_logic;
     variable midle_v: std_logic;

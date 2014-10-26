@@ -82,6 +82,7 @@ synth2 synth0 (
 
 );
 
+
 uart_ss uart_ss0 (
     .rst(rst),
     .clk96(clk96m), 
@@ -92,10 +93,29 @@ uart_ss uart_ss0 (
     .valid_data_in(read_data_valid),
     .data_in(read_data)
 
-
 );
 
+/*
+uart 
+#(.CLOCK_DIVIDE( 8 )) // 96M / (4*3M) = 8
+uart_ss1(
+    .clk(clk96m), 
+    .rst(rst), 
+    .rx(usb_tx), 
+    .tx(usb_rx),
 
+    .transmit(read_data_valid), 
+    .tx_byte(read_data),
+
+    .received(valid_data), 
+    .rx_byte(data), 
+
+    .is_receiving(), 
+    .is_transmitting(), 
+    .recv_error()
+
+);
+*/
 
 /*
 assign led1 = data[0] | data[1];
