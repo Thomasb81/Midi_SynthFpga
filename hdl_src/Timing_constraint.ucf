@@ -23,4 +23,6 @@ TIMEGRP "SDDRIVER_FIFODATA" = FFS("synth0/SD_ss0/SDdriver0/fifo_data<*>") ;
 TIMESPEC TS_RAM2SDFIFODATA = FROM "DPRAM_grp" THRU "FINISH" TO "SDDRIVER_FIFODATA" TIG;
 #Created by Constraints Editor (xc3s500e-vq100-4) - 2014/10/14
 TIMEGRP "SNDGEN_SAMPLE_RL" = FFS("synth0/soundgen0/sample_r<*>") FFS("synth0/soundgen0/sample_l<*>");
-#Created by Constraints Editor (xc3s500e-vq100-4) - 2014/10/14
+#Created by Constraints Editor (xc3s500e-vq100-4) - 2014/10/22
+TIMEGRP "SDDRIVER_STATE" = FFS("synth0/SD_ss0/SDdriver0/state*"); 
+TIMESPEC TS_SDDRIVER_STATE2NBDATA = FROM "SDDRIVER_STATE" TO "SDDRIVER_NBDATA" TS_clk_builder0_CLKFX_BUF * 2;
