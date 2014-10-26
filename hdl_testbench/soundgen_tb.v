@@ -42,13 +42,15 @@ module soundgen_tb;
 	wire [17:0] sound_l;
 
 	// Instantiate the Unit Under Test (UUT)
-	soundgen2 uut (
+	soundgen soundgen0( 
 		.clk(clk), 
 		.rst(rst), 
 		.wavetable_r(wavetable_r), 
 		.wavetable_r_valid(wavetable_r_valid), 
 		.wavetable_l(wavetable_l), 
 		.wavetable_l_valid(wavetable_l_valid), 
+		.sound(16'h0000),
+		.sound_valid(1'b0),
 		.volume_adsr(volume_adsr), 
 		.velocity(velocity), 
 		.tick48k(tick48k), 
@@ -119,7 +121,7 @@ always @(posedge clk) begin
   if (0 <= cpt && cpt <=3 ) begin
      wavetable_r <= 0;
      wavetable_l <= 256;
-     volume_adsr <= 18'h01010;
+     volume_adsr <= 18'h1ffff;
      velocity <= 18'h1ffff;
   end
   else if (4<= cpt && cpt <=7) begin
